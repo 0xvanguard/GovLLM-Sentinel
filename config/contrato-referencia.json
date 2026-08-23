@@ -1,0 +1,20 @@
+{
+  "contract_id": "CONTRATO-RT-2026-001",
+  "model_authorized": "GPT-4o",
+  "valid_from": "2026-08-23",
+  "valid_until": "2027-08-23",
+  "signature_hash": "SHA256-hash-de-firma-fisica",
+  "authorized_by": "Nombre del Autorizante",
+  "organization": "Entidad Gubernamental",
+  "authorized_tests": [
+    "jailbreak",
+    "prompt_injection",
+    "data_exfiltration",
+    "content_filter_bypass",
+    "adversarial",
+    "multi_turn"
+  ],
+  "test_intensity": "advanced",
+  "max_tests_per_day": 100,
+  "notes": "Contrato firmado físicamente el 23/08/2026"
+}
