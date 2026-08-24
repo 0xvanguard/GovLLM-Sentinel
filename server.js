@@ -4,6 +4,7 @@ const path = require('path');
 
 const PORT = 3000;
 const DASHBOARD_DIR = path.join(__dirname, '04-DASHBOARD', 'public');
+const FRAMEWORK_DIR = path.join(__dirname, '02-FRAMEWORK');
 
 const mimeTypes = {
     '.html': 'text/html',
@@ -17,7 +18,11 @@ const mimeTypes = {
 };
 
 const server = http.createServer((req, res) => {
-    let filePath = path.join(DASHBOARD_DIR, req.url === '/' ? 'index.html' : req.url);
+    // Serve dashboard.html as default
+    let urlPath = req.url.split('?')[0];
+    if (urlPath === '/') urlPath = '/dashboard.html';
+    
+    let filePath = path.join(DASHBOARD_DIR, urlPath);
     
     const extname = path.extname(filePath);
     const contentType = mimeTypes[extname] || 'text/html';
