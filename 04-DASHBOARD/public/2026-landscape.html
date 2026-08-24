@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panorama 2026: Seguridad LLM — GovLLM-Sentinel</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none';">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"></noscript>
+    <style>
+        .container{position:relative;z-index:1;max-width:1300px;margin:0 auto;padding:24px}
+        .top-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--bg-card);border:1px solid var(--border-glass);border-radius:var(--radius-md);margin-bottom:24px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);animation:fadeInUp .4s ease-out}
+        .top-nav a{color:var(--primary-light);text-decoration:none;font-size:.88rem;font-weight:500;transition:color var(--transition-fast)}
+        .top-nav a:hover{color:var(--text-primary)}
+        .top-nav .nav-links{display:flex;gap:20px}
+        .hero{position:relative;background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(239,68,68,.08));border:1px solid rgba(245,158,11,.15);border-radius:var(--radius-xl);padding:48px 40px;margin-bottom:32px;overflow:hidden;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);animation:fadeInUp .6s ease-out}
+        .hero::before{content:'';position:absolute;top:-50%;right:-15%;width:500px;height:500px;background:radial-gradient(circle,rgba(245,158,11,.06),transparent 70%);pointer-events:none}
+        .hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(245,158,11,.3),rgba(239,68,68,.3),transparent)}
+        .hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:var(--warning-light);padding:6px 14px;border-radius:20px;font-size:.8rem;font-weight:600;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase}
+        .hero h1{font-size:2.4rem;font-weight:800;letter-spacing:-.03em;background:linear-gradient(135deg,var(--text-primary),var(--warning-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px}
+        .hero p{color:var(--text-secondary);font-size:1.05rem;max-width:800px;line-height:1.7}
+        .hero-stats{display:flex;gap:32px;margin-top:28px;flex-wrap:wrap}
+        .hero-stat{text-align:center}
+        .hero-stat-value{font-size:2rem;font-weight:800;letter-spacing:-.02em}
+        .hero-stat-label{font-size:.78rem;color:var(--text-muted);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+        .section{background:var(--bg-card);border:1px solid var(--border-glass);border-radius:var(--radius-lg);padding:32px;margin-bottom:24px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);position:relative;overflow:hidden;animation:fadeInUp .6s ease-out both}
+        .section::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent)}
+        .section-title{font-size:1.3rem;font-weight:700;margin-bottom:24px;color:var(--text-primary);display:flex;align-items:center;gap:12px;letter-spacing:-.01em}
+        .section-title .icon{width:40px;height:40px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0}
+        .icon-orange{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:var(--warning-light)}
+        .icon-red{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--danger-light)}
+        .icon-green{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);color:var(--success-light)}
+        .icon-blue{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);color:var(--primary-light)}
+        .icon-purple{background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);color:#c084fc}
+        .icon-pink{background:rgba(236,72,153,.1);border:1px solid rgba(236,72,153,.2);color:#f472b6}
+        .icon-indigo{background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);color:#a5b4fc}
+        .model-table{width:100%;border-collapse:collapse}
+        .model-table th,.model-table td{padding:14px 16px;text-align:left;border-bottom:1px solid rgba(255,255,255,.04)}
+        .model-table th{background:rgba(255,255,255,.02);font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,.06)}
+        .model-table td{font-size:.88rem;color:var(--text-secondary);transition:all var(--transition-fast)}
+        .model-table tr:hover td{background:rgba(255,255,255,.02);color:var(--text-primary)}
+        .model-rank{font-family:var(--font-mono);font-weight:700;font-size:.85rem;color:var(--text-muted);width:40px}
+        .model-rank.top{color:var(--success-light)}
+        .model-rank.bottom{color:var(--danger-light)}
+        .model-name{font-weight:600;color:var(--text-primary)}
+        .model-provider{font-size:.78rem;color:var(--text-muted)}
+        .tag{padding:3px 8px;border-radius:4px;font-size:.7rem;font-weight:600;letter-spacing:.02em;display:inline-block}
+        .tag-anthropic{background:rgba(217,119,6,.1);color:#f59e0b;border:1px solid rgba(217,119,6,.15)}
+        .tag-openai{background:rgba(16,185,129,.1);color:var(--success-light);border:1px solid rgba(16,185,129,.15)}
+        .tag-google{background:rgba(59,130,246,.1);color:var(--primary-light);border:1px solid rgba(59,130,246,.15)}
+        .tag-meta{background:rgba(99,102,241,.1);color:#a5b4fc;border:1px solid rgba(99,102,241,.15)}
+        .tag-deepseek{background:rgba(239,68,68,.1);color:var(--danger-light);border:1px solid rgba(239,68,68,.15)}
+        .tag-mistral{background:rgba(168,85,247,.1);color:#c084fc;border:1px solid rgba(168,85,247,.15)}
+        .asr-bar{display:flex;align-items:center;gap:10px}
+        .asr-track{flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;min-width:100px}
+        .asr-fill{height:100%;border-radius:4px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+        .asr-value{font-family:var(--font-mono);font-size:.82rem;font-weight:700;min-width:50px;text-align:right}
+        .cat-bar{margin:10px 0}
+        .cat-bar-label{display:flex;justify-content:space-between;margin-bottom:3px}
+        .cat-bar-name{font-size:.85rem;color:var(--text-secondary)}
+        .cat-bar-val{font-family:var(--font-mono);font-size:.85rem;font-weight:600}
+        .cat-bar-track{height:7px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+        .cat-bar-fill{height:100%;border-radius:4px}
+        .insight-card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:var(--radius-md);padding:20px;transition:all var(--transition-normal)}
+        .insight-card:hover{background:rgba(255,255,255,.04)}
+        .insight-card-title{font-weight:600;font-size:.95rem;color:var(--text-primary);margin-bottom:8px}
+        .insight-card-desc{font-size:.85rem;color:var(--text-secondary);line-height:1.5}
+        .finding-box{padding:16px;border-radius:var(--radius-md);margin:12px 0;font-size:.88rem;line-height:1.6}
+        .finding-box.warn{background:rgba(245,158,11,.04);border:1px solid rgba(245,158,11,.1);color:var(--text-secondary)}
+        .finding-box.danger{background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.1);color:var(--text-secondary)}
+        .finding-box.info{background:rgba(59,130,246,.04);border:1px solid rgba(59,130,246,.1);color:var(--text-secondary)}
+        .source-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:.7rem;font-weight:600;background:rgba(255,255,255,.04);color:var(--text-muted);border:1px solid rgba(255,255,255,.06);margin-bottom:12px}
+        .footer{text-align:center;padding:32px 20px;color:var(--text-muted);font-size:.85rem;border-top:1px solid rgba(255,255,255,.04);margin-top:16px}
+        .footer strong{color:var(--text-secondary)}
+        .footer a{color:var(--primary-light);text-decoration:none;transition:color var(--transition-fast)}
+        .footer a:hover{color:var(--text-primary);text-decoration:underline}
+        @media(max-width:768px){.container{padding:14px}.hero{padding:28px 20px}.hero h1{font-size:1.6rem}.hero-stats{gap:20px}.model-table{font-size:.82rem}.model-table th,.model-table td{padding:8px 10px}.top-nav{flex-direction:column;gap:10px}}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="top-nav">
+            <a href="index.html">← Dashboard</a>
+            <div class="nav-links">
+                <a href="model-dataset.html">📊 Dataset 2024</a>
+                <a href="harmbench-guide.html">🔬 Guía HarmBench</a>
+                <a href="jailbreak-learning.html">🔓 Aprendizaje</a>
+            </div>
+        </nav>
+
+        <section class="hero">
+            <div class="hero-badge">🔥 Actualización 2026</div>
+            <h1>🛡️ Panorama de Seguridad LLM en 2026</h1>
+            <p>Datos recientes de Phare V2 (Feb 2026), Cisco HarmBench, Gray Swan multi-attempt, y DeepTeam multi-turn analysis. Cómo están los modelos frontier contra jailbreaking ahora mismo. La situación ha cambiado mucho desde 2024.</p>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="hero-stat-value" style="color:var(--warning-light);">55</div>
+                    <div class="hero-stat-label">Modelos Evaluados (Phare V2)</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value" style="color:var(--danger-light);">100%</div>
+                    <div class="hero-stat-label">DeepSeek R1 ASR</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value" style="color:var(--success-light);">0%</div>
+                    <div class="hero-stat-label">Claude Opus 4.5 (200 intentos)</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value" style="color:#c084fc;">47.3%</div>
+                    <div class="hero-stat-label">Crescendo Multi-Turn</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Phare V2 Leaderboard -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="icon icon-orange">🏆</span>
+                Phare V2 Safety Leaderboard (Febrero 2026)
+            </h2>
+            <span class="source-tag">📊 Phare V2 · Giskard + Google DeepMind · 55 modelos · Feb 2026</span>
+            <p style="color:var(--text-secondary);margin-bottom:20px;font-size:.92rem;">
+                Benchmarks de 4 dimensiones: Hallucination, Harm, Bias, y <strong>Jailbreak Resistance</strong>. Safety improvements are stagnating — mejor reasoning NO corrige safety.
+            </p>
+            <div style="overflow-x:auto;">
+                <table class="model-table">
+                    <thead>
+                        <tr><th>#</th><th>Modelo</th><th>Provider</th><th>Score General</th><th>Hallucination</th><th>Harm</th><th>Bias</th><th>Jailbreak</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="model-rank top">1</td>
+                            <td><span class="model-name">Claude 4.5 Haiku</span></td>
+                            <td><span class="tag tag-anthropic">Anthropic</span></td>
+                            <td><div class="asr-bar"><span class="asr-value" style="color:var(--success-light)">83.2%</span><div class="asr-track"><div class="asr-fill" style="width:83.2%;background:linear-gradient(90deg,var(--success),var(--success-light))"></div></div></div></td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">83.6%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">99.9%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--warning-light)">70.7%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--success-light)">78.5%</td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank top">2</td>
+                            <td><span class="model-name">Claude 4.5 Opus</span></td>
+                            <td><span class="tag tag-anthropic">Anthropic</span></td>
+                            <td><div class="asr-bar"><span class="asr-value" style="color:var(--success-light)">82.4%</span><div class="asr-track"><div class="asr-fill" style="width:82.4%;background:linear-gradient(90deg,var(--success),var(--success-light))"></div></div></div></td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">88.2%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">98.3%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--warning-light)">63.2%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--success-light)">79.8%</td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank top">3</td>
+                            <td><span class="model-name">Claude 4.5 Sonnet</span></td>
+                            <td><span class="tag tag-anthropic">Anthropic</span></td>
+                            <td><div class="asr-bar"><span class="asr-value" style="color:var(--success-light)">77.6%</span><div class="asr-track"><div class="asr-fill" style="width:77.6%;background:linear-gradient(90deg,#22c55e,#4ade80)"></div></div></div></td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">87.0%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">99.1%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--danger-light)">49.1%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--success-light)">75.2%</td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank">8</td>
+                            <td><span class="model-name">Gemini 3.0 Pro</span></td>
+                            <td><span class="tag tag-google">Google</span></td>
+                            <td><div class="asr-bar"><span class="asr-value" style="color:var(--warning-light)">73.3%</span><div class="asr-track"><div class="asr-fill" style="width:73.3%;background:linear-gradient(90deg,var(--warning),var(--warning-light))"></div></div></div></td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">81.0%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">93.5%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--warning-light)">53.7%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--warning-light)">65.1%</td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank">10</td>
+                            <td><span class="model-name">GPT 5.1</span></td>
+                            <td><span class="tag tag-openai">OpenAI</span></td>
+                            <td><div class="asr-bar"><span class="asr-value" style="color:var(--warning-light)">72.8%</span><div class="asr-track"><div class="asr-fill" style="width:72.8%;background:linear-gradient(90deg,var(--warning),var(--warning-light))"></div></div></div></td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">81.8%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">96.9%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--danger-light)">46.8%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--warning-light)">65.8%</td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank">11</td>
+                            <td><span class="model-name">GPT 5.2</span></td>
+                            <td><span class="tag tag-openai">OpenAI</span></td>
+                            <td><div class="asr-bar"><span class="asr-value" style="color:var(--warning-light)">71.0%</span><div class="asr-track"><div class="asr-fill" style="width:71%;background:linear-gradient(90deg,#f97316,#fb923c)"></div></div></div></td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">77.1%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">96.9%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--danger-light)">38.5%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--warning-light)">71.6%</td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank">12</td>
+                            <td><span class="model-name">Llama 4 Maverick</span></td>
+                            <td><span class="tag tag-meta">Meta</span></td>
+                            <td><div class="asr-bar"><span class="asr-value" style="color:#fb923c">70.8%</span><div class="asr-track"><div class="asr-fill" style="width:70.8%;background:linear-gradient(90deg,#f97316,#fb923c)"></div></div></div></td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">71.5%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">89.3%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--success-light)">73.7%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--danger-light)">49.0%</td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank bottom">26</td>
+                            <td><span class="model-name">DeepSeek V3.1</span></td>
+                            <td><span class="tag tag-deepseek">DeepSeek</span></td>
+                            <td><div class="asr-bar"><span class="asr-value" style="color:#fb923c">64.8%</span><div class="asr-track"><div class="asr-fill" style="width:64.8%;background:linear-gradient(90deg,#f97316,#fb923c)"></div></div></div></td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">61.6%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">94.4%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--warning-light)">65.2%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--danger-light)">38.2%</td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank bottom">38</td>
+                            <td><span class="model-name">Mistral Large 3</span></td>
+                            <td><span class="tag tag-mistral">Mistral</span></td>
+                            <td><div class="asr-bar"><span class="asr-value" style="color:var(--danger-light)">60.9%</span><div class="asr-track"><div class="asr-fill" style="width:60.9%;background:linear-gradient(90deg,var(--danger),var(--danger-light))"></div></div></div></td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">68.0%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">88.1%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--warning-light)">62.7%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--danger-light)">24.9%</td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank bottom">46</td>
+                            <td><span class="model-name">DeepSeek R1 0528</span></td>
+                            <td><span class="tag tag-deepseek">DeepSeek</span></td>
+                            <td><div class="asr-bar"><span class="asr-value" style="color:var(--danger-light)">58.6%</span><div class="asr-track"><div class="asr-fill" style="width:58.6%;background:linear-gradient(90deg,#991b1b,var(--danger-light))"></div></div></div></td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">72.9%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem">95.2%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--danger-light)">25.5%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--danger-light)">40.7%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p style="color:var(--text-muted);font-size:.78rem;margin-top:12px;font-style:italic">* Jailbreak resistance score: higher = more resistant. Bias resistance is the weakest dimension across nearly every model.</p>
+        </section>
+
+        <!-- Cisco HarmBench -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="icon icon-red">⚔️</span>
+                Cisco HarmBench — ASR Real (Enero 2025)
+            </h2>
+            <span class="source-tag">🔬 Cisco · 50 prompts HarmBench · Enero 2025</span>
+            <p style="color:var(--text-secondary);margin-bottom:20px;font-size:.92rem;">
+                Pruebas directas de attaque contra modelos. <strong style="color:var(--danger-light);">DeepSeek R1 no bloqueó NINGÚN prompt harmful</strong> — 100% ASR.
+            </p>
+            <div style="max-width:700px">
+                <div class="cat-bar">
+                    <div class="cat-bar-label"><span class="cat-bar-name"><strong>DeepSeek R1</strong></span><span class="cat-bar-val" style="color:var(--danger-light)">100% ASR</span></div>
+                    <div class="cat-bar-track"><div class="cat-bar-fill" style="width:100%;background:linear-gradient(90deg,#991b1b,var(--danger-light))"></div></div>
+                </div>
+                <div class="cat-bar">
+                    <div class="cat-bar-label"><span class="cat-bar-name"><strong>Llama 3.1-405B</strong></span><span class="cat-bar-val" style="color:var(--danger-light)">96% ASR</span></div>
+                    <div class="cat-bar-track"><div class="cat-bar-fill" style="width:96%;background:linear-gradient(90deg,var(--danger),var(--danger-light))"></div></div>
+                </div>
+                <div class="cat-bar">
+                    <div class="cat-bar-label"><span class="cat-bar-name"><strong>GPT-4o</strong></span><span class="cat-bar-val" style="color:#fb923c">86% ASR</span></div>
+                    <div class="cat-bar-track"><div class="cat-bar-fill" style="width:86%;background:linear-gradient(90deg,#f97316,#fb923c)"></div></div>
+                </div>
+                <div class="cat-bar">
+                    <div class="cat-bar-label"><span class="cat-bar-name"><strong>Gemini 1.5 Pro</strong></span><span class="cat-bar-val" style="color:var(--warning-light)">64% ASR</span></div>
+                    <div class="cat-bar-track"><div class="cat-bar-fill" style="width:64%;background:linear-gradient(90deg,var(--warning),var(--warning-light))"></div></div>
+                </div>
+                <div class="cat-bar">
+                    <div class="cat-bar-label"><span class="cat-bar-name"><strong>o1-preview</strong></span><span class="cat-bar-val" style="color:var(--success-light)">26% ASR</span></div>
+                    <div class="cat-bar-track"><div class="cat-bar-fill" style="width:26%;background:linear-gradient(90deg,var(--success),var(--success-light))"></div></div>
+                </div>
+                <div class="cat-bar">
+                    <div class="cat-bar-label"><span class="cat-bar-name"><strong>Claude 3.5 Sonnet</strong></span><span class="cat-bar-val" style="color:var(--success-light)">26% ASR</span></div>
+                    <div class="cat-bar-track"><div class="cat-bar-fill" style="width:26%;background:linear-gradient(90deg,var(--success),var(--success-light))"></div></div>
+                </div>
+            </div>
+            <div class="finding-box danger" style="margin-top:16px">
+                <strong style="color:var(--danger-light)">⚠️ DeepSeek R1:</strong> Enkrypt AI encontró que R1 es <strong>11× más probable</strong> de generar contenido harmful que OpenAI o1. 83% de bias attacks y 78% de insecure-code attacks tuvieron éxito.
+            </div>
+        </section>
+
+        <!-- Gray Swan Multi-Attempt -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="icon icon-purple">🔁</span>
+                Gray Swan — Multi-Attempt Testing
+            </h2>
+            <span class="source-tag">🦢 Gray Swan + Anthropic System Card · 200-attempt RL campaigns</span>
+            <p style="color:var(--text-secondary);margin-bottom:20px;font-size:.92rem;">
+                La métrica de 1 intento es <strong>engañosa</strong>. Los atacantes reales intentan múltiples veces. El ASR se degrada dramáticamente con más intentos.
+            </p>
+            <div style="overflow-x:auto;">
+                <table class="model-table">
+                    <thead>
+                        <tr><th>Modelo</th><th>1 intento</th><th>10 intentos</th><th>100 intentos</th><th>200 intentos</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="model-name">Claude Opus 4.5 (coding)</span></td>
+                            <td><div class="asr-bar"><span class="asr-value" style="color:var(--success-light)">4.7%</span><div class="asr-track"><div class="asr-fill" style="width:4.7%;background:var(--success)"></div></div></div></td>
+                            <td><div class="asr-bar"><span class="asr-value" style="color:var(--warning-light)">33.6%</span><div class="asr-track"><div class="asr-fill" style="width:33.6%;background:var(--warning)"></div></div></div></td>
+                            <td><div class="asr-bar"><span class="asr-value" style="color:var(--danger-light)">63.0%</span><div class="asr-track"><div class="asr-fill" style="width:63%;background:var(--danger)"></div></div></div></td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--danger-light)">~70%</td>
+                        </tr>
+                        <tr>
+                            <td><span class="model-name">Claude Opus 4.5 (computer use + ext. thinking)</span></td>
+                            <td><div class="asr-bar"><span class="asr-value" style="color:var(--success-light)">0%</span><div class="asr-track"><div class="asr-fill" style="width:0%;background:var(--success)"></div></div></div></td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--success-light)">0%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--success-light)">0%</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--success-light);font-weight:700">0% ✦ SATURATED</td>
+                        </tr>
+                        <tr>
+                            <td><span class="model-name">GPT 5.1</span></td>
+                            <td><div class="asr-bar"><span class="asr-value" style="color:var(--warning-light)">21.9%</span><div class="asr-track"><div class="asr-fill" style="width:21.9%;background:var(--warning)"></div></div></div></td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--text-muted)">—</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--text-muted)">—</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--text-muted)">—</td>
+                        </tr>
+                        <tr>
+                            <td><span class="model-name">Gemini 3 Pro</span></td>
+                            <td><div class="asr-bar"><span class="asr-value" style="color:var(--warning-light)">12.5%</span><div class="asr-track"><div class="asr-fill" style="width:12.5%;background:var(--warning)"></div></div></div></td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--text-muted)">—</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--text-muted)">—</td>
+                            <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--text-muted)">—</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="finding-box warn" style="margin-top:16px">
+                <strong style="color:var(--warning-light)">⚡ Hallazgo crítico:</strong> Claude Opus 4.5 en coding mode salta de 4.7% a 63% ASR con 100 intentos. <strong>La safety no es una propiedad fija del modelo</strong> — es función de la configuración de deployment. En computer-use mode con extended thinking, el mismo modelo logra 0% ASR después de 200 intentos.
+            </div>
+        </section>
+
+        <!-- DeepTeam Multi-Turn -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="icon icon-blue">🔄</span>
+                DeepTeam — Multi-Turn Jailbreaking (Julio 2026)
+            </h2>
+            <span class="source-tag">🧪 DeepTeam Framework · 6 modelos · 3 estrategias · Julio 2026</span>
+            <p style="color:var(--text-secondary);margin-bottom:20px;font-size:.92rem;">
+                Análisis comparativo de Linear, Tree, y Crescendo jailbreaking contra los modelos más recientes. Crescendo es 2.46× más efectivo que Linear.
+            </p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+                <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:var(--radius-md);padding:20px">
+                    <h3 style="font-size:1rem;color:var(--text-primary);margin-bottom:12px">⚔️ Ataques Multi-Turn</h3>
+                    <div class="cat-bar"><div class="cat-bar-label"><span class="cat-bar-name"><strong>Crescendo</strong> (Manipulación psicológica)</span><span class="cat-bar-val" style="color:var(--danger-light)">47.3%</span></div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:47.3%;background:linear-gradient(90deg,var(--danger),var(--danger-light))"></div></div></div>
+                    <div class="cat-bar"><div class="cat-bar-label"><span class="cat-bar-name"><strong>Tree</strong> (Búsqueda branching)</span><span class="cat-bar-val" style="color:var(--warning-light)">32.8%</span></div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:32.8%;background:linear-gradient(90deg,var(--warning),var(--warning-light))"></div></div></div>
+                    <div class="cat-bar"><div class="cat-bar-label"><span class="cat-bar-name"><strong>Linear</strong> (Escalación secuencial)</span><span class="cat-bar-val" style="color:var(--success-light)">19.2%</span></div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:19.2%;background:linear-gradient(90deg,var(--success),var(--success-light))"></div></div></div>
+                </div>
+                <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:var(--radius-md);padding:20px">
+                    <h3 style="font-size:1rem;color:var(--text-primary);margin-bottom:12px">🎯 Vulnerabilidades</h3>
+                    <div class="cat-bar"><div class="cat-bar-label"><span class="cat-bar-name"><strong>Competencia</strong> (Confidential data)</span><span class="cat-bar-val" style="color:var(--danger-light)">52.4%</span></div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:52.4%;background:linear-gradient(90deg,var(--danger),var(--danger-light))"></div></div></div>
+                    <div class="cat-bar"><div class="cat-bar-label"><span class="cat-bar-name"><strong>Bias</strong> (Género/Racial)</span><span class="cat-bar-val" style="color:var(--warning-light)">31.2%</span></div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:31.2%;background:linear-gradient(90deg,var(--warning),var(--warning-light))"></div></div></div>
+                    <div class="cat-bar"><div class="cat-bar-label"><span class="cat-bar-name"><strong>Toxicidad</strong> (Insults/Threats)</span><span class="cat-bar-val" style="color:var(--warning-light)">28.9%</span></div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:28.9%;background:linear-gradient(90deg,var(--warning),var(--warning-light))"></div></div></div>
+                </div>
+            </div>
+            <h3 style="font-size:1rem;color:var(--text-primary);margin-bottom:12px">📊 Ranking de Modelos (Multi-Turn Average Breach Rate)</h3>
+            <div style="max-width:700px">
+                <div class="cat-bar"><div class="cat-bar-label"><span class="cat-bar-name"><strong>Claude 3.5 Sonnet</strong></span><span class="cat-bar-val" style="color:var(--success-light)">24.1%</span></div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:24.1%;background:linear-gradient(90deg,var(--success),var(--success-light))"></div></div></div>
+                <div class="cat-bar"><div class="cat-bar-label"><span class="cat-bar-name"><strong>Claude 4 Opus</strong></span><span class="cat-bar-val" style="color:var(--success-light)">28.7%</span></div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:28.7%;background:linear-gradient(90deg,#22c55e,#4ade80)"></div></div></div>
+                <div class="cat-bar"><div class="cat-bar-label"><span class="cat-bar-name"><strong>Gemini 2.5 Flash</strong></span><span class="cat-bar-val" style="color:var(--warning-light)">33.2%</span></div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:33.2%;background:linear-gradient(90deg,var(--warning),var(--warning-light))"></div></div></div>
+                <div class="cat-bar"><div class="cat-bar-label"><span class="cat-bar-name"><strong>o4-mini</strong></span><span class="cat-bar-val" style="color:var(--warning-light)">36.8%</span></div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:36.8%;background:linear-gradient(90deg,var(--warning),var(--warning-light))"></div></div></div>
+                <div class="cat-bar"><div class="cat-bar-label"><span class="cat-bar-name"><strong>Gemini 2.0 Flash</strong></span><span class="cat-bar-val" style="color:#fb923c">39.4%</span></div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:39.4%;background:linear-gradient(90deg,#f97316,#fb923c)"></div></div></div>
+                <div class="cat-bar"><div class="cat-bar-label"><span class="cat-bar-name"><strong>GPT 4.1</strong></span><span class="cat-bar-val" style="color:var(--danger-light)">41.7%</span></div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:41.7%;background:linear-gradient(90deg,var(--danger),var(--danger-light))"></div></div></div>
+            </div>
+            <div class="finding-box info" style="margin-top:16px">
+                <strong style="color:var(--primary-light)">📌 Combinación más peligrosa:</strong> Crescendo vs GPT 4.1 = <strong>73.2%</strong> breach rate. Linear vs Claude 3.5 Sonnet = solo 8.7%. La brecha entre el más vulnerable y el más robusto es de <strong>17.6 puntos porcentuales</strong>.
+            </div>
+        </section>
+
+        <!-- Key Takeaways -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="icon icon-green">💡</span>
+                Conclusiones para 2026
+            </h2>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px">
+                <div class="insight-card" style="border-left:3px solid rgba(217,119,6,.3)">
+                    <div class="insight-card-title">👑 Anthropic domina Jailbreak Resistance</div>
+                    <div class="insight-card-desc">Los 3 primeros lugares en Phare V2 son Claude 4.5 (Haiku, Opus, Sonnet). 75-80% jailbreak resistance vs 24.9% de Mistral Large 3. La diferencia entre providers es enorme.</div>
+                </div>
+                <div class="insight-card" style="border-left:3px solid rgba(239,68,68,.3)">
+                    <div class="insight-card-title">💀 DeepSeek R1 es una bomba de tiempo</div>
+                    <div class="insight-card-desc">100% ASR en Cisco HarmBench. 11× más probable de generar contenido harmful que o1. Guardrails son "illusory and easily removed" via fine-tuning (FAR.AI).</div>
+                </div>
+                <div class="insight-card" style="border-left:3px solid rgba(245,158,11,.3)">
+                    <div class="insight-card-title">⚠️ Safety Stagnation</div>
+                    <div class="insight-card-desc">Phare V2 concluye que mejor reasoning NO corrige safety. "Safety requires dedicated investment and engineering — it is not an inevitable byproduct of model development."</div>
+                </div>
+                <div class="insight-card" style="border-left:3px solid rgba(16,185,129,.3)">
+                    <div class="insight-card-title">🎯 1 intento es mentira</div>
+                    <div class="insight-card-desc">Claude Opus 4.5: 4.7% → 63% con 100 intentos. Las métricas de single-attempt "dramatically understate real-world risk." Multi-attempt testing es el estándar mínimo.</div>
+                </div>
+                <div class="insight-card" style="border-left:3px solid rgba(168,85,247,.3)">
+                    <div class="insight-card-title">🔄 Multi-turn es la nueva frontera</div>
+                    <div class="insight-card-desc">Crescendo (47.3%) es 2.46× más efectivo que Linear (19.2%). Los ataques de manipulación psicológica over multiple turns son la amenaza más grande en 2026.</div>
+                </div>
+                <div class="insight-card" style="border-left:3px solid rgba(99,102,241,.3)">
+                    <div class="insight-card-title">🏢 Governance gap masivo</div>
+                    <div class="insight-card-desc">78% de empresas usan AI pero solo 33% tienen controles de responsible AI. Solo 1 en 5 tiene governance maduro para AI agents autónomos.</div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <p>
+                <strong>GovLLM-Sentinel</strong> — Panorama de Seguridad LLM 2026<br>
+                Fuentes: <a href="https://responsibleailabs.ai/knowledge-hub/articles/rail-ai-safety-index-2026" target="_blank">RAIL AI Safety Index 2026</a> · <a href="https://www.trydeepteam.com/blog/multi-turn-jailbreaking-analysis-deepteam" target="_blank">DeepTeam Multi-Turn</a> · <a href="https://neurips.cc/virtual/2025/poster/119576" target="_blank">BoN Jailbreaking (NeurIPS 2025)</a><br>
+                <a href="index.html">Dashboard</a> · <a href="model-dataset.html">Dataset 2024</a> · <a href="harmbench-guide.html">Guía HarmBench</a> · <a href="jailbreak-learning.html">Aprendizaje</a>
+            </p>
+            <p style="margin-top:14px;font-size:.8rem">© 2026 GovLLM-Sentinel. Uso educativo y ético.</p>
+        </footer>
+    </div>
+</body>
+</html>
