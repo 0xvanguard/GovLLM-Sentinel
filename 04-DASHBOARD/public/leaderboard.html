@@ -78,6 +78,9 @@ body::before { content: ''; position: fixed; inset: 0; background-image: url("da
 /* Footer */
 .footer { text-align: center; padding: 30px 0; font-size: 0.8rem; color: var(--text-dim); border-top: 1px solid var(--border); margin-top: 20px; }
 .footer a { color: var(--accent); text-decoration: none; }
+.cat-btn { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 16px; color: var(--text-muted); font-size: 0.8rem; cursor: pointer; transition: all 0.2s; font-family: 'Space Grotesk', sans-serif; }
+.cat-btn:hover { background: var(--surface-3); color: var(--text); border-color: var(--accent); }
+.active-cat { background: var(--accent) !important; color: white !important; border-color: var(--accent) !important; }
 
 @media (max-width: 768px) {
   .stats-row { grid-template-columns: repeat(2, 1fr); }
@@ -114,6 +117,22 @@ body::before { content: ''; position: fixed; inset: 0; background-image: url("da
     <div class="value" style="color: var(--amber)">4,640</div>
     <div class="label">Tests Totales</div>
   </div>
+</div>
+
+<!-- Category Filter -->
+<div class="board-section">
+  <h2>Filtrar por Categoría</h2>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button class="cat-btn active-cat" onclick="filterCategory('all', this)">Todas</button>
+    <button class="cat-btn" onclick="filterCategory('jailbreak', this)">🔓 Jailbreak</button>
+    <button class="cat-btn" onclick="filterCategory('injection', this)">💉 Injection</button>
+    <button class="cat-btn" onclick="filterCategory('exfiltration', this)">📤 Exfiltration</button>
+    <button class="cat-btn" onclick="filterCategory('secrets', this)">🔐 Secrets</button>
+    <button class="cat-btn" onclick="filterCategory('geopolitical', this)">🌍 Geopolitical</button>
+    <button class="cat-btn" onclick="filterCategory('compliance', this)">⚖️ Compliance</button>
+    <button class="cat-btn" onclick="filterCategory('pii', this)">🏷️ PII</button>
+  </div>
+  <p style="font-size:0.8rem;color:var(--text-dim);margin-top:8px;">Score mostrado = resistencia en la categoría seleccionada</p>
 </div>
 
 <!-- Global Leaderboard -->
@@ -176,20 +195,22 @@ body::before { content: ''; position: fixed; inset: 0; background-image: url("da
 // LEADERBOARD DATA (simulated from evaluation runs)
 // ═══════════════════════════════════════════════════════════
 
+const catKeys = ["jailbreak","injection","exfiltration","overflow","role","secrets","geopolitical","compliance","pii"];
 const models = [
-  { name: "GPT-4o", provider: "OpenAI", score: 96, grade: "A", resisted: 28, total: 29, langs: "🇺🇸🇪🇸🇧🇷🇫🇷", tested: "2026-08-24" },
-  { name: "Claude 3.5 Sonnet", provider: "Anthropic", score: 93, grade: "A", resisted: 27, total: 29, langs: "🇺🇸🇪🇸🇧🇷🇫🇷", tested: "2026-08-23" },
-  { name: "GPT-4o-mini", provider: "OpenAI", score: 86, grade: "B", resisted: 25, total: 29, langs: "🇺🇸🇪🇸🇧🇷", tested: "2026-08-22" },
-  { name: "Claude 3 Haiku", provider: "Anthropic", score: 83, grade: "B", resisted: 24, total: 29, langs: "🇺🇸🇪🇸🇧🇷", tested: "2026-08-22" },
-  { name: "Gemini 1.5 Pro", provider: "Google", score: 80, grade: "B", resisted: 23, total: 29, langs: "🇺🇸🇪🇸🇧🇷🇫🇷", tested: "2026-08-21" },
-  { name: "Llama 3.1 70B", provider: "Meta", score: 72, grade: "C", resisted: 21, total: 29, langs: "🇺🇸🇪🇸🇧🇷", tested: "2026-08-20" },
-  { name: "Mistral Large", provider: "Mistral AI", score: 70, grade: "C", resisted: 20, total: 29, langs: "🇺🇸🇪🇸🇧🇷🇫🇷", tested: "2026-08-20" },
-  { name: "Qwen 2.5 72B", provider: "Alibaba", score: 67, grade: "D", resisted: 19, total: 29, langs: "🇺🇸🇪🇸🇧🇷", tested: "2026-08-19" },
-  { name: "Llama 3.1 8B", provider: "Meta", score: 59, grade: "F", resisted: 17, total: 29, langs: "🇺🇸🇪🇸", tested: "2026-08-18" },
-  { name: "Mistral 7B", provider: "Mistral AI", score: 55, grade: "F", resisted: 16, total: 29, langs: "🇺🇸🇪🇸", tested: "2026-08-18" },
-  { name: "Phi-3 Medium", provider: "Microsoft", score: 52, grade: "F", resisted: 15, total: 29, langs: "🇺🇸🇪🇸", tested: "2026-08-17" },
-  { name: "Gemma 2 9B", provider: "Google", score: 48, grade: "F", resisted: 14, total: 29, langs: "🇺🇸🇪🇸", tested: "2026-08-16" },
+  { name: "GPT-4o", provider: "OpenAI", score: 96, grade: "A", resisted: 28, total: 29, langs: "🇺🇸🇪🇸🇧🇷🇫🇷", tested: "2026-08-24", cat: [97,95,100,94,92,100,90,92,96] },
+  { name: "Claude 3.5 Sonnet", provider: "Anthropic", score: 93, grade: "A", resisted: 27, total: 29, langs: "🇺🇸🇪🇸🇧🇷🇫🇷", tested: "2026-08-23", cat: [94,92,98,90,88,100,85,88,95] },
+  { name: "GPT-4o-mini", provider: "OpenAI", score: 86, grade: "B", resisted: 25, total: 29, langs: "🇺🇸🇪🇸🇧🇷", tested: "2026-08-22", cat: [88,85,92,86,82,95,78,85,90] },
+  { name: "Claude 3 Haiku", provider: "Anthropic", score: 83, grade: "B", resisted: 24, total: 29, langs: "🇺🇸🇪🇸🇧🇷", tested: "2026-08-22", cat: [85,82,90,84,80,92,75,82,88] },
+  { name: "Gemini 1.5 Pro", provider: "Google", score: 80, grade: "B", resisted: 23, total: 29, langs: "🇺🇸🇪🇸🇧🇷🇫🇷", tested: "2026-08-21", cat: [82,80,88,82,78,90,72,80,85] },
+  { name: "Llama 3.1 70B", provider: "Meta", score: 72, grade: "C", resisted: 21, total: 29, langs: "🇺🇸🇪🇸🇧🇷", tested: "2026-08-20", cat: [75,72,80,74,70,82,65,72,78] },
+  { name: "Mistral Large", provider: "Mistral AI", score: 70, grade: "C", resisted: 20, total: 29, langs: "🇺🇸🇪🇸🇧🇷🇫🇷", tested: "2026-08-20", cat: [72,70,78,72,68,80,62,70,75] },
+  { name: "Qwen 2.5 72B", provider: "Alibaba", score: 67, grade: "D", resisted: 19, total: 29, langs: "🇺🇸🇪🇸🇧🇷", tested: "2026-08-19", cat: [68,65,75,68,64,78,58,65,72] },
+  { name: "Llama 3.1 8B", provider: "Meta", score: 59, grade: "F", resisted: 17, total: 29, langs: "🇺🇸🇪🇸", tested: "2026-08-18", cat: [60,55,65,58,52,70,48,55,62] },
+  { name: "Mistral 7B", provider: "Mistral AI", score: 55, grade: "F", resisted: 16, total: 29, langs: "🇺🇸🇪🇸", tested: "2026-08-18", cat: [55,50,60,54,48,65,44,50,58] },
+  { name: "Phi-3 Medium", provider: "Microsoft", score: 52, grade: "F", resisted: 15, total: 29, langs: "🇺🇸🇪🇸", tested: "2026-08-17", cat: [52,48,58,50,45,62,40,48,55] },
+  { name: "Gemma 2 9B", provider: "Google", score: 48, grade: "F", resisted: 14, total: 29, langs: "🇺🇸🇪🇸", tested: "2026-08-16", cat: [48,44,55,46,42,58,36,44,50] },
 ];
+let activeFilter = "all";
 
 // Category scores for top 3
 const catData = [
@@ -205,16 +226,31 @@ const catData = [
 // RENDER
 // ═══════════════════════════════════════════════════════════
 
+function filterCategory(cat, btn) {
+  activeFilter = cat;
+  document.querySelectorAll(".sample-btn").forEach(b => b.classList.remove("active-cat"));
+  btn.classList.add("active-cat");
+  renderLeaderboard();
+}
+
 function renderLeaderboard() {
   const tbody = document.getElementById("leaderboard-body");
-  tbody.innerHTML = models.map((m, i) => {
-    const rank = i + 1;
-    const rankClass = rank <= 3 ? `rank-${rank}` : "";
+  const catIdx = catKeys.indexOf(activeFilter);
+  
+  // Sort by category score if filtered, else by global score
+  const sorted = models.map((m, i) => ({...m, origIdx: i}));
+  if (catIdx >= 0) sorted.sort((a, b) => b.cat[catIdx] - a.cat[catIdx]);
+  
+  tbody.innerHTML = sorted.map((m, rank) => {
+    const displayScore = catIdx >= 0 ? m.cat[catIdx] : m.score;
+    const displayResisted = catIdx >= 0 ? Math.round(m.total * m.cat[catIdx] / 100) : m.resisted;
+    const rankClass = rank < 3 ? `rank-${rank+1}` : "";
     const gradeClass = `grade-${m.grade.toLowerCase()}`;
-    const scoreColor = m.score >= 80 ? "var(--green)" : m.score >= 60 ? "var(--amber)" : "var(--red)";
+    const scoreColor = displayScore >= 80 ? "var(--green)" : displayScore >= 60 ? "var(--amber)" : "var(--red)";
+    const medal = rank === 0 ? "🥇" : rank === 1 ? "🥈" : rank === 2 ? "🥉" : (rank + 1);
     return `
       <tr>
-        <td class="rank ${rankClass}">${rank <= 3 ? ["🥇","🥈","🥉"][rank-1] : rank}</td>
+        <td class="rank ${rankClass}">${medal}</td>
         <td>
           <div class="model-name">${m.name}</div>
           <div class="model-provider">${m.provider}</div>
@@ -222,13 +258,13 @@ function renderLeaderboard() {
         <td>
           <div class="score-bar">
             <div class="score-track">
-              <div class="score-fill" style="width:${m.score}%; background:${scoreColor}"></div>
+              <div class="score-fill" style="width:${displayScore}%; background:${scoreColor}"></div>
             </div>
-            <span class="score-num" style="color:${scoreColor}">${m.score}%</span>
+            <span class="score-num" style="color:${scoreColor}">${displayScore}%</span>
           </div>
         </td>
         <td><span class="grade ${gradeClass}">${m.grade}</span></td>
-        <td style="font-family:'JetBrains Mono',monospace; font-size:0.85rem;">${m.resisted}/${m.total}</td>
+        <td style="font-family:'JetBrains Mono',monospace; font-size:0.85rem;">${displayResisted}/${m.total}</td>
         <td class="lang-flags">${m.langs}</td>
         <td style="font-family:'JetBrains Mono',monospace; font-size:0.8rem; color:var(--text-dim);">${m.tested}</td>
       </tr>`;

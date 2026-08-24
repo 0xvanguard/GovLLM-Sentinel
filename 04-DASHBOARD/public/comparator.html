@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GovLLM-Sentinel — Comparador de Modelos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #0a0e17; --surface: #111827; --surface-2: #1a2332; --accent: #3b82f6; --accent2: #a855f7; --green: #22c55e; --amber: #f59e0b; --red: #ef4444; --text: #f1f5f9; --text-muted: #94a3b8; --text-dim: #64748b; --border: #1e293b; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Space Grotesk', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%233b82f6' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); pointer-events: none; z-index: 0; }
+.container { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 24px; }
+.header { text-align: center; padding: 30px 0 20px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+.header h1 { font-size: 1.8rem; font-weight: 700; } .header h1 span { color: var(--accent); }
+.header .sub { color: var(--text-muted); font-size: 0.9rem; margin-top: 4px; }
+
+/* Selector */
+.selector { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; margin-bottom: 24px; }
+.model-select { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.model-select label { font-size: 0.8rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; display: block; margin-bottom: 8px; }
+.model-select select { width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: 'Space Grotesk', sans-serif; font-size: 0.9rem; outline: none; }
+.model-select select:focus { border-color: var(--accent); }
+.vs-badge { font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; font-weight: 700; color: var(--text-dim); text-align: center; }
+
+/* Radar */
+.radar-section { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 24px; text-align: center; }
+.radar-section h2 { font-size: 1rem; font-weight: 600; margin-bottom: 16px; color: var(--text-muted); }
+.radar-container { display: flex; justify-content: center; }
+.radar-legend { display: flex; gap: 24px; justify-content: center; margin-top: 16px; font-size: 0.8rem; }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* Stats comparison */
+.compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.compare-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.compare-card h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; }
+.compare-card.model-a { border-top: 3px solid var(--accent); }
+.compare-card.model-b { border-top: 3px solid var(--accent2); }
+.stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+.stat-row:last-child { border-bottom: none; }
+.stat-label { color: var(--text-muted); }
+.stat-value { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+.winner { color: var(--green); }
+
+/* Diff table */
+.diff-section { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+.diff-section h2 { font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: var(--text-muted); }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th { font-size: 0.7rem; text-transform: uppercase; color: var(--text-dim); padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.diff-pos { color: var(--green); font-family: 'JetBrains Mono', monospace; }
+.diff-neg { color: var(--red); font-family: 'JetBrains Mono', monospace; }
+.diff-zero { color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
+</style>
+</head>
+<body>
+<div class="container">
+<header class="header">
+  <h1>⚔️ Comparador de <span>Modelos</span></h1>
+  <div class="sub">Compara dos modelos lado a lado con radar superpuesto</div>
+</header>
+
+<div class="selector">
+  <div class="model-select">
+    <label>Modelo A</label>
+    <select id="modelA" onchange="update()"></select>
+  </div>
+  <div class="vs-badge">VS</div>
+  <div class="model-select">
+    <label>Modelo B</label>
+    <select id="modelB" onchange="update()"></select>
+  </div>
+</div>
+
+<div class="radar-section">
+  <h2>Radar Comparativo</h2>
+  <div class="radar-container"><svg id="radar-svg" viewBox="0 0 400 400" width="400" height="400"></svg></div>
+  <div class="radar-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div><span id="legendA">Modelo A</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div><span id="legendB">Modelo B</span></div>
+  </div>
+</div>
+
+<div class="compare-grid">
+  <div class="compare-card model-a"><h3 id="cardTitleA">Modelo A</h3><div id="statsA"></div></div>
+  <div class="compare-card model-b"><h3 id="cardTitleB">Modelo B</h3><div id="statsB"></div></div>
+</div>
+
+<div class="diff-section">
+  <h2>Diferencia por Categoría (A − B)</h2>
+  <table><thead><tr><th>Categoría</th><th>Score A</th><th>Score B</th><th>Diferencia</th><th>Ganador</th></tr></thead><tbody id="diff-table"></tbody></table>
+</div>
+</div>
+
+<script>
+const categories = ["Jailbreak","Injection","Exfiltration","Overflow","Role","Secrets","Geopolitical","Compliance","PII"];
+const models = [
+  {name:"GPT-4o",provider:"OpenAI",score:96,grade:"A",resisted:28,total:29,risk:"BAJO",catScores:[97,95,100,94,92,100,90,92,96]},
+  {name:"Claude 3.5 Sonnet",provider:"Anthropic",score:93,grade:"A",resisted:27,total:29,risk:"BAJO",catScores:[94,92,98,90,88,100,85,88,95]},
+  {name:"GPT-4o-mini",provider:"OpenAI",score:86,grade:"B",resisted:25,total:29,risk:"BAJO",catScores:[88,85,92,86,82,95,78,85,90]},
+  {name:"Claude 3 Haiku",provider:"Anthropic",score:83,grade:"B",resisted:24,total:29,risk:"MEDIO",catScores:[85,82,90,84,80,92,75,82,88]},
+  {name:"Gemini 1.5 Pro",provider:"Google",score:80,grade:"B",resisted:23,total:29,risk:"MEDIO",catScores:[82,80,88,82,78,90,72,80,85]},
+  {name:"Llama 3.1 70B",provider:"Meta",score:72,grade:"C",resisted:21,total:29,risk:"MEDIO",catScores:[75,72,80,74,70,82,65,72,78]},
+  {name:"Mistral Large",provider:"Mistral AI",score:70,grade:"C",resisted:20,total:29,risk:"MEDIO",catScores:[72,70,78,72,68,80,62,70,75]},
+  {name:"Qwen 2.5 72B",provider:"Alibaba",score:67,grade:"D",resisted:19,total:29,risk:"ALTO",catScores:[68,65,75,68,64,78,58,65,72]},
+  {name:"Llama 3.1 8B",provider:"Meta",score:59,grade:"F",resisted:17,total:29,risk:"ALTO",catScores:[60,55,65,58,52,70,48,55,62]},
+  {name:"Mistral 7B",provider:"Mistral AI",score:55,grade:"F",resisted:16,total:29,risk:"ALTO",catScores:[55,50,60,54,48,65,44,50,58]},
+  {name:"Phi-3 Medium",provider:"Microsoft",score:52,grade:"F",resisted:15,total:29,risk:"CRÍTICO",catScores:[52,48,58,50,45,62,40,48,55]},
+  {name:"Gemma 2 9B",provider:"Google",score:48,grade:"F",resisted:14,total:29,risk:"CRÍTICO",catScores:[48,44,55,46,42,58,36,44,50]},
+];
+
+// Populate selects
+const selA = document.getElementById("modelA");
+const selB = document.getElementById("modelB");
+models.forEach((m, i) => {
+  selA.innerHTML += `<option value="${i}" ${i===0?'selected':''}>${m.name} (${m.score}%)</option>`;
+  selB.innerHTML += `<option value="${i}" ${i===1?'selected':''}>${m.name} (${m.score}%)</option>`;
+});
+
+function drawRadar(svg, scoresA, scoresB) {
+  const cx = 200, cy = 200, maxR = 150, n = 9;
+  const step = (2*Math.PI)/n, start = -Math.PI/2;
+  const p = (i,r) => ({ x: cx+r*Math.cos(start+i*step), y: cy+r*Math.sin(start+i*step) });
+
+  let html = "";
+  // Grid
+  [0.2,0.4,0.6,0.8,1.0].forEach(pct => {
+    let pts = []; for(let i=0;i<n;i++){const pp=p(i,maxR*pct); pts.push(`${pp.x},${pp.y}`);}
+    html += `<polygon points="${pts.join(' ')}" fill="none" stroke="#1e293b" stroke-width="1"/>`;
+  });
+  // Axes + labels
+  for(let i=0;i<n;i++){
+    const pp=p(i,maxR); html+=`<line x1="${cx}" y1="${cy}" x2="${pp.x}" y2="${pp.y}" stroke="#334155" stroke-width="0.5"/>`;
+    const lp=p(i,maxR+20); const anch=lp.x<cx-5?"end":lp.x>cx+5?"start":"middle";
+    html+=`<text x="${lp.x}" y="${lp.y}" font-family="monospace" font-size="11" fill="#94a3b8" text-anchor="${anch}" dominant-baseline="middle">${categories[i]}</text>`;
+  }
+  // Model A polygon
+  let ptsA=[]; for(let i=0;i<n;i++){const pp=p(i,maxR*scoresA[i]/100); ptsA.push(`${pp.x},${pp.y}`);}
+  html+=`<polygon points="${ptsA.join(' ')}" fill="rgba(59,130,246,0.15)" stroke="#3b82f6" stroke-width="2"/>`;
+  for(let i=0;i<n;i++){const pp=p(i,maxR*scoresA[i]/100); html+=`<circle cx="${pp.x}" cy="${pp.y}" r="3" fill="#3b82f6"/>`;}
+  // Model B polygon
+  let ptsB=[]; for(let i=0;i<n;i++){const pp=p(i,maxR*scoresB[i]/100); ptsB.push(`${pp.x},${pp.y}`);}
+  html+=`<polygon points="${ptsB.join(' ')}" fill="rgba(168,85,247,0.15)" stroke="#a855f7" stroke-width="2"/>`;
+  for(let i=0;i<n;i++){const pp=p(i,maxR*scoresB[i]/100); html+=`<circle cx="${pp.x}" cy="${pp.y}" r="3" fill="#a855f7"/>`;}
+
+  svg.innerHTML = html;
+}
+
+function renderStats(container, m, color) {
+  container.innerHTML = [
+    ["Score", `${m.score}/100`],
+    ["Grade", m.grade],
+    ["Resistencia", `${m.resisted}/${m.total}`],
+    ["Riesgo", m.risk],
+    ["Proveedor", m.provider],
+  ].map(([l,v]) => `<div class="stat-row"><span class="stat-label">${l}</span><span class="stat-value" style="color:${color}">${v}</span></div>`).join("");
+}
+
+function update() {
+  const a = models[selA.value], b = models[selB.value];
+  document.getElementById("legendA").textContent = a.name;
+  document.getElementById("legendB").textContent = b.name;
+  document.getElementById("cardTitleA").textContent = a.name;
+  document.getElementById("cardTitleB").textContent = b.name;
+  document.getElementById("cardTitleA").style.color = "#3b82f6";
+  document.getElementById("cardTitleB").style.color = "#a855f7";
+
+  drawRadar(document.getElementById("radar-svg"), a.catScores, b.catScores);
+  renderStats(document.getElementById("statsA"), a, "#3b82f6");
+  renderStats(document.getElementById("statsB"), b, "#a855f7");
+
+  // Diff table
+  document.getElementById("diff-table").innerHTML = categories.map((c, i) => {
+    const diff = a.catScores[i] - b.catScores[i];
+    const cls = diff > 0 ? "diff-pos" : diff < 0 ? "diff-neg" : "diff-zero";
+    const sign = diff > 0 ? "+" : "";
+    const winner = diff > 0 ? a.name : diff < 0 ? b.name : "Empate";
+    return `<tr><td>${c}</td><td style="font-family:'JetBrains Mono',monospace">${a.catScores[i]}%</td><td style="font-family:'JetBrains Mono',monospace">${b.catScores[i]}%</td><td class="${cls}">${sign}${diff}</td><td style="font-size:0.8rem;color:var(--text-muted)">${winner}</td></tr>`;
+  }).join("");
+}
+
+update();
+</script>
+</body>
+</html>

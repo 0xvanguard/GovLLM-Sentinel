@@ -69,6 +69,30 @@ ul { font-size: 0.85rem; color: var(--muted); padding-left: 20px; margin-bottom:
 
 .print-btn { position: fixed; bottom: 20px; right: 20px; background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-family: 'Space Grotesk', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(26,86,219,0.3); z-index: 100; }
 .print-btn:hover { background: #1e40af; }
+
+/* Radar Animations */
+@keyframes radarFadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+@keyframes radarDraw { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
+@keyframes radarDotPop { from { r: 0; opacity: 0; } to { r: 2.5; opacity: 1; } }
+@keyframes radarLabelFade { from { opacity: 0; } to { opacity: 1; } }
+.radar-card { animation: radarFadeIn 0.5s ease forwards; opacity: 0; }
+.radar-card:nth-child(1) { animation-delay: 0.0s; }
+.radar-card:nth-child(2) { animation-delay: 0.1s; }
+.radar-card:nth-child(3) { animation-delay: 0.2s; }
+.radar-card:nth-child(4) { animation-delay: 0.3s; }
+.radar-card:nth-child(5) { animation-delay: 0.4s; }
+.radar-card:nth-child(6) { animation-delay: 0.5s; }
+.radar-card polygon[data-data] { stroke-dasharray: 1000; animation: radarDraw 1s ease forwards 0.3s; }
+.radar-card circle[data-dot] { animation: radarDotPop 0.3s ease forwards; }
+.radar-card circle[data-dot]:nth-child(1) { animation-delay: 0.5s; }
+.radar-card circle[data-dot]:nth-child(2) { animation-delay: 0.55s; }
+.radar-card circle[data-dot]:nth-child(3) { animation-delay: 0.6s; }
+.radar-card circle[data-dot]:nth-child(4) { animation-delay: 0.65s; }
+.radar-card circle[data-dot]:nth-child(5) { animation-delay: 0.7s; }
+.radar-card circle[data-dot]:nth-child(6) { animation-delay: 0.75s; }
+.radar-card circle[data-dot]:nth-child(7) { animation-delay: 0.8s; }
+.radar-card circle[data-dot]:nth-child(8) { animation-delay: 0.85s; }
+.radar-card circle[data-dot]:nth-child(9) { animation-delay: 0.9s; }
 </style>
 </head>
 <body>
@@ -220,7 +244,7 @@ function generateRadarSVG(catScores, size = 160) {
     const p = polarToCart(angle, r);
     dataPoints.push(`${p.x},${p.y}`);
   }
-  const dataPolygon = `<polygon points="${dataPoints.join(' ')}" fill="rgba(59,130,246,0.2)" stroke="#3b82f6" stroke-width="1.5"/>`;
+  const dataPolygon = `<polygon points="${dataPoints.join(' ')}" fill="rgba(59,130,246,0.2)" stroke="#3b82f6" stroke-width="1.5" data-data/>`;
 
   // Data dots
   let dataDots = "";
@@ -228,7 +252,7 @@ function generateRadarSVG(catScores, size = 160) {
     const angle = startAngle + i * angleStep;
     const r = maxR * (catScores[i] / 100);
     const p = polarToCart(angle, r);
-    dataDots += `<circle cx="${p.x}" cy="${p.y}" r="2.5" fill="#3b82f6"/>`;
+    dataDots += `<circle cx="${p.x}" cy="${p.y}" r="2.5" fill="#3b82f6" data-dot/>`;
   }
 
   // Labels (only first, middle, last to avoid clutter)
