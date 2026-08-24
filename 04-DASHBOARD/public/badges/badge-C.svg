@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#111827"/>
+      <stop offset="100%" style="stop-color:#1a2332"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f59e0b"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b"/>
+      <stop offset="100%" style="stop-color:#f59e0b88"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="80" rx="12" fill="url(#bg)" stroke="#334155" stroke-width="1"/>
+  <rect width="4" height="80" rx="2" fill="url(#accent)"/>
+  <g transform="translate(20, 14)">
+    <path d="M20 4 L34 10 L34 22 C34 32 20 40 20 40 C20 40 6 32 6 22 L6 10 Z" fill="url(#shield)" opacity="0.9"/>
+    <path d="M15 22 L19 26 L27 16" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="68" y="28" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#f1f5f9">GovLLM-Sentinel</text>
+  <text x="68" y="50" font-family="monospace" font-size="11" font-weight="600" fill="#94a3b8">ACEPTABLE · Grade: </text>
+  <text x="195" y="50" font-family="monospace" font-size="14" font-weight="700" fill="#f59e0b">C</text>
+  <text x="68" y="68" font-family="monospace" font-size="10" fill="#64748b">Score: 72/100 · 29 vectors · 5 languages</text>
+  <circle cx="280" cy="40" r="18" fill="none" stroke="#f59e0b" stroke-width="2" opacity="0.3"/>
+  <path d="M270 40 L277 47 L292 32" stroke="#f59e0b" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
