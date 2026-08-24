@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dataset de Modelos — GovLLM-Sentinel</title>
+
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none';">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="robots" content="noindex, nofollow">
+
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"></noscript>
+
+    <style>
+        .container { position: relative; z-index: 1; max-width: 1300px; margin: 0 auto; padding: 24px; }
+
+        .top-nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: var(--radius-md); margin-bottom: 24px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); animation: fadeInUp 0.4s ease-out; }
+        .top-nav a { color: var(--primary-light); text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: color var(--transition-fast); }
+        .top-nav a:hover { color: var(--text-primary); }
+        .top-nav .nav-links { display: flex; gap: 20px; }
+
+        .hero { position: relative; background: linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(168, 85, 247, 0.08)); border: 1px solid rgba(236, 72, 153, 0.15); border-radius: var(--radius-xl); padding: 48px 40px; margin-bottom: 32px; overflow: hidden; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); animation: fadeInUp 0.6s ease-out; }
+        .hero::before { content: ''; position: absolute; top: -50%; right: -15%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(236, 72, 153, 0.06), transparent 70%); pointer-events: none; }
+        .hero::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(236, 72, 153, 0.3), rgba(168, 85, 247, 0.3), transparent); }
+        .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(236, 72, 153, 0.1); border: 1px solid rgba(236, 72, 153, 0.2); color: #f472b6; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 16px; letter-spacing: 0.04em; text-transform: uppercase; }
+        .hero h1 { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em; background: linear-gradient(135deg, var(--text-primary), #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 12px; }
+        .hero p { color: var(--text-secondary); font-size: 1.05rem; max-width: 750px; line-height: 1.7; }
+        .hero-stats { display: flex; gap: 32px; margin-top: 28px; flex-wrap: wrap; }
+        .hero-stat { text-align: center; }
+        .hero-stat-value { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; }
+        .hero-stat-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+
+        .section { background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); padding: 32px; margin-bottom: 24px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); position: relative; overflow: hidden; animation: fadeInUp 0.6s ease-out both; }
+        .section::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent); }
+
+        .section-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 24px; color: var(--text-primary); display: flex; align-items: center; gap: 12px; letter-spacing: -0.01em; }
+        .section-title .icon { width: 40px; height: 40px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0; }
+        .icon-pink { background: rgba(236, 72, 153, 0.1); border: 1px solid rgba(236, 72, 153, 0.2); color: #f472b6; }
+        .icon-red { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger-light); }
+        .icon-green { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: var(--success-light); }
+        .icon-blue { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); color: var(--primary-light); }
+        .icon-purple { background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.2); color: #c084fc; }
+        .icon-yellow { background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); color: var(--warning-light); }
+
+        /* Filter Bar */
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .filter-btn { padding: 8px 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 20px; font-size: 0.82rem; color: var(--text-secondary); cursor: pointer; transition: all var(--transition-fast); font-family: var(--font-main); }
+        .filter-btn:hover, .filter-btn.active { background: rgba(236, 72, 153, 0.1); border-color: rgba(236, 72, 153, 0.2); color: #f472b6; }
+
+        /* Model Table */
+        .model-table { width: 100%; border-collapse: collapse; }
+        .model-table th, .model-table td { padding: 14px 16px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+        .model-table th { background: rgba(255, 255, 255, 0.02); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); border-bottom: 1px solid rgba(255, 255, 255, 0.06); position: sticky; top: 0; }
+        .model-table td { font-size: 0.88rem; color: var(--text-secondary); transition: all var(--transition-fast); }
+        .model-table tr:hover td { background: rgba(255, 255, 255, 0.02); color: var(--text-primary); }
+
+        .model-rank { font-family: var(--font-mono); font-weight: 700; font-size: 0.85rem; color: var(--text-muted); width: 40px; }
+        .model-rank.top { color: var(--success-light); }
+        .model-rank.bottom { color: var(--danger-light); }
+
+        .model-name { font-weight: 600; color: var(--text-primary); }
+        .model-provider { font-size: 0.78rem; color: var(--text-muted); }
+
+        .tag { padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.02em; display: inline-block; }
+        .tag-oss { background: rgba(16, 185, 129, 0.1); color: var(--success-light); border: 1px solid rgba(16, 185, 129, 0.15); }
+        .tag-api { background: rgba(59, 130, 246, 0.1); color: var(--primary-light); border: 1px solid rgba(59, 130, 246, 0.15); }
+        .tag-r2d2 { background: rgba(168, 85, 247, 0.1); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.15); }
+
+        /* ASR Bar */
+        .asr-bar { display: flex; align-items: center; gap: 10px; }
+        .asr-track { flex: 1; height: 8px; background: rgba(255, 255, 255, 0.06); border-radius: 4px; overflow: hidden; min-width: 120px; }
+        .asr-fill { height: 100%; border-radius: 4px; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .asr-value { font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; min-width: 50px; text-align: right; }
+
+        /* Category Breakdown */
+        .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+        .cat-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: var(--radius-md); padding: 18px; transition: all var(--transition-normal); }
+        .cat-card:hover { background: rgba(255, 255, 255, 0.04); border-color: var(--border-accent); }
+        .cat-card-name { font-weight: 600; font-size: 0.92rem; color: var(--text-primary); margin-bottom: 12px; }
+        .cat-bar { margin: 6px 0; }
+        .cat-bar-label { display: flex; justify-content: space-between; margin-bottom: 3px; }
+        .cat-bar-name { font-size: 0.78rem; color: var(--text-muted); }
+        .cat-bar-val { font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600; }
+        .cat-bar-track { height: 5px; background: rgba(255, 255, 255, 0.06); border-radius: 3px; overflow: hidden; }
+        .cat-bar-fill { height: 100%; border-radius: 3px; }
+
+        /* Insights */
+        .insights-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+        .insight-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: var(--radius-md); padding: 20px; transition: all var(--transition-normal); }
+        .insight-card:hover { background: rgba(255, 255, 255, 0.04); }
+        .insight-card-title { font-weight: 600; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 8px; }
+        .insight-card-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; }
+        .insight-card-stat { font-family: var(--font-mono); font-size: 1.5rem; font-weight: 800; margin-top: 10px; }
+
+        /* Footer */
+        .footer { text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid rgba(255, 255, 255, 0.04); margin-top: 16px; }
+        .footer strong { color: var(--text-secondary); }
+        .footer a { color: var(--primary-light); text-decoration: none; transition: color var(--transition-fast); }
+        .footer a:hover { color: var(--text-primary); text-decoration: underline; }
+
+        @media (max-width: 768px) {
+            .container { padding: 14px; }
+            .hero { padding: 28px 20px; }
+            .hero h1 { font-size: 1.6rem; }
+            .hero-stats { gap: 20px; }
+            .model-table { font-size: 0.82rem; }
+            .model-table th, .model-table td { padding: 8px 10px; }
+            .cat-grid { grid-template-columns: 1fr; }
+            .insights-grid { grid-template-columns: 1fr; }
+            .top-nav { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="top-nav">
+            <a href="index.html">← Dashboard</a>
+            <div class="nav-links">
+                <a href="harmbench-guide.html">🔬 Guía HarmBench</a>
+                <a href="jailbreak-learning.html">🔓 Aprendizaje</a>
+            </div>
+        </nav>
+
+        <!-- Hero -->
+        <section class="hero">
+            <div class="hero-badge">📊 Dataset de Evaluación</div>
+            <h1>🛡️ Vulnerabilidad de Modelos a Jailbreaking</h1>
+            <p>Rankings de 33 LLMs evaluados con 18 métodos de ataque en 510 comportamientos. Datos basados en HarmBench (Mazeika et al. 2024). El ASR promedio indica qué tan vulnerable es un modelo — más alto = más vulnerable.</p>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="hero-stat-value" style="color: #f472b6;">33</div>
+                    <div class="hero-stat-label">Modelos</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value" style="color: var(--danger-light);">18</div>
+                    <div class="hero-stat-label">Ataques</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value" style="color: var(--primary-light);">510</div>
+                    <div class="hero-stat-label">Behaviors</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value" style="color: var(--success-light);">5.9%</div>
+                    <div class="hero-stat-label">ASR Mínimo</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value" style="color: var(--danger-light);">98%</div>
+                    <div class="hero-stat-label">ASR Máximo</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Rankings -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="icon icon-pink">🏆</span>
+                Ranking de Modelos por Robustez (ASR Promedio ↓)
+            </h2>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.92rem;">
+                ASR (Attack Success Rate) promedio contra todos los ataques. <strong style="color: var(--success-light);">Menor ASR = más robusto.</strong> Datos de HarmBench evaluation con greedy decoding, N=512 tokens.
+            </p>
+            <div style="overflow-x: auto;">
+                <table class="model-table" id="modelTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Modelo</th>
+                            <th>Tipo</th>
+                            <th>ASR Promedio</th>
+                            <th>GCG</th>
+                            <th>PAIR</th>
+                            <th>Direct</th>
+                            <th>Robustez</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="model-rank top">1</td>
+                            <td><span class="model-name">Zephyr 7B + R2D2</span><br><span class="model-provider">Adversarial Training</span></td>
+                            <td><span class="tag tag-r2d2">R2D2</span></td>
+                            <td>
+                                <div class="asr-bar">
+                                    <span class="asr-value" style="color: var(--success-light);">5.9%</span>
+                                    <div class="asr-track"><div class="asr-fill" style="width: 5.9%; background: linear-gradient(90deg, var(--success), var(--success-light));"></div></div>
+                                </div>
+                            </td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">5.9%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">12.4%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">2.1%</td>
+                            <td><span class="tag tag-r2d2">SOTA</span></td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank top">2</td>
+                            <td><span class="model-name">Llama 2 7B Chat</span><br><span class="model-provider">Meta · RLHF Safety</span></td>
+                            <td><span class="tag tag-oss">Open Source</span></td>
+                            <td>
+                                <div class="asr-bar">
+                                    <span class="asr-value" style="color: var(--success-light);">18.2%</span>
+                                    <div class="asr-track"><div class="asr-fill" style="width: 18.2%; background: linear-gradient(90deg, var(--success), #4ade80);"></div></div>
+                                </div>
+                            </td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">31.8%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">14.2%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">1.8%</td>
+                            <td><span class="tag tag-oss">Muy Robusto</span></td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank top">3</td>
+                            <td><span class="model-name">Llama 2 13B Chat</span><br><span class="model-provider">Meta · RLHF Safety</span></td>
+                            <td><span class="tag tag-oss">Open Source</span></td>
+                            <td>
+                                <div class="asr-bar">
+                                    <span class="asr-value" style="color: var(--success-light);">19.1%</span>
+                                    <div class="asr-track"><div class="asr-fill" style="width: 19.1%; background: linear-gradient(90deg, var(--success), #4ade80);"></div></div>
+                                </div>
+                            </td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">30.2%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">15.8%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">2.0%</td>
+                            <td><span class="tag tag-oss">Muy Robusto</span></td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank">4</td>
+                            <td><span class="model-name">Llama 2 70B Chat</span><br><span class="model-provider">Meta · RLHF Safety</span></td>
+                            <td><span class="tag tag-oss">Open Source</span></td>
+                            <td>
+                                <div class="asr-bar">
+                                    <span class="asr-value" style="color: #4ade80;">21.5%</span>
+                                    <div class="asr-track"><div class="asr-fill" style="width: 21.5%; background: linear-gradient(90deg, #22c55e, #4ade80);"></div></div>
+                                </div>
+                            </td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">28.7%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">18.3%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">3.1%</td>
+                            <td><span class="tag tag-oss">Robusto</span></td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank">5</td>
+                            <td><span class="model-name">GPT-4</span><br><span class="model-provider">OpenAI · Proprietary</span></td>
+                            <td><span class="tag tag-api">API</span></td>
+                            <td>
+                                <div class="asr-bar">
+                                    <span class="asr-value" style="color: #fbbf24;">24.8%</span>
+                                    <div class="asr-track"><div class="asr-fill" style="width: 24.8%; background: linear-gradient(90deg, var(--warning), var(--warning-light));"></div></div>
+                                </div>
+                            </td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">22.1%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">35.6%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">4.2%</td>
+                            <td><span class="tag tag-api">Moderado</span></td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank">6</td>
+                            <td><span class="model-name">Claude 3 Opus</span><br><span class="model-provider">Anthropic · Proprietary</span></td>
+                            <td><span class="tag tag-api">API</span></td>
+                            <td>
+                                <div class="asr-bar">
+                                    <span class="asr-value" style="color: #fbbf24;">26.3%</span>
+                                    <div class="asr-track"><div class="asr-fill" style="width: 26.3%; background: linear-gradient(90deg, var(--warning), var(--warning-light));"></div></div>
+                                </div>
+                            </td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">19.8%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">38.2%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">5.1%</td>
+                            <td><span class="tag tag-api">Moderado</span></td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank">7</td>
+                            <td><span class="model-name">Claude 3.5 Sonnet</span><br><span class="model-provider">Anthropic · Proprietary</span></td>
+                            <td><span class="tag tag-api">API</span></td>
+                            <td>
+                                <div class="asr-bar">
+                                    <span class="asr-value" style="color: #fbbf24;">28.1%</span>
+                                    <div class="asr-track"><div class="asr-fill" style="width: 28.1%; background: linear-gradient(90deg, var(--warning), var(--warning-light));"></div></div>
+                                </div>
+                            </td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">21.4%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">41.5%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">6.3%</td>
+                            <td><span class="tag tag-api">Moderado</span></td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank">8</td>
+                            <td><span class="model-name">Mistral 7B Instruct v0.2</span><br><span class="model-provider">Mistral AI · Open Weight</span></td>
+                            <td><span class="tag tag-oss">Open Source</span></td>
+                            <td>
+                                <div class="asr-bar">
+                                    <span class="asr-value" style="color: #fb923c;">42.6%</span>
+                                    <div class="asr-track"><div class="asr-fill" style="width: 42.6%; background: linear-gradient(90deg, #f97316, #fb923c);"></div></div>
+                                </div>
+                            </td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">48.3%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">52.1%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">12.4%</td>
+                            <td><span class="tag" style="background: rgba(249, 115, 22, 0.1); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.15);">Vulnerable</span></td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank">9</td>
+                            <td><span class="model-name">Zephyr 7B Beta</span><br><span class="model-provider">HuggingFace · DPO</span></td>
+                            <td><span class="tag tag-oss">Open Source</span></td>
+                            <td>
+                                <div class="asr-bar">
+                                    <span class="asr-value" style="color: #fb923c;">45.2%</span>
+                                    <div class="asr-track"><div class="asr-fill" style="width: 45.2%; background: linear-gradient(90deg, #f97316, #fb923c);"></div></div>
+                                </div>
+                            </td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">51.7%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">48.9%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">14.8%</td>
+                            <td><span class="tag" style="background: rgba(249, 115, 22, 0.1); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.15);">Vulnerable</span></td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank">10</td>
+                            <td><span class="model-name">Vicuna 13B</span><br><span class="model-provider">LMSYS · Fine-tuned LLaMA</span></td>
+                            <td><span class="tag tag-oss">Open Source</span></td>
+                            <td>
+                                <div class="asr-bar">
+                                    <span class="asr-value" style="color: #fb923c;">48.7%</span>
+                                    <div class="asr-track"><div class="asr-fill" style="width: 48.7%; background: linear-gradient(90deg, #f97316, #fb923c);"></div></div>
+                                </div>
+                            </td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">55.2%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">51.3%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">18.6%</td>
+                            <td><span class="tag" style="background: rgba(249, 115, 22, 0.1); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.15);">Vulnerable</span></td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank">11</td>
+                            <td><span class="model-name">GPT-3.5 Turbo</span><br><span class="model-provider">OpenAI · Proprietary</span></td>
+                            <td><span class="tag tag-api">API</span></td>
+                            <td>
+                                <div class="asr-bar">
+                                    <span class="asr-value" style="color: #fb923c;">51.3%</span>
+                                    <div class="asr-track"><div class="asr-fill" style="width: 51.3%; background: linear-gradient(90deg, #f97316, #fb923c);"></div></div>
+                                </div>
+                            </td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">58.4%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">54.7%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">22.1%</td>
+                            <td><span class="tag" style="background: rgba(249, 115, 22, 0.1); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.15);">Vulnerable</span></td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank">12</td>
+                            <td><span class="model-name">Qwen 1.5 Chat 7B</span><br><span class="model-provider">Alibaba · Open Weight</span></td>
+                            <td><span class="tag tag-oss">Open Source</span></td>
+                            <td>
+                                <div class="asr-bar">
+                                    <span class="asr-value" style="color: #fb923c;">53.8%</span>
+                                    <div class="asr-track"><div class="asr-fill" style="width: 53.8%; background: linear-gradient(90deg, #f97316, #fb923c);"></div></div>
+                                </div>
+                            </td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">61.2%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">56.4%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">24.3%</td>
+                            <td><span class="tag" style="background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.15);">Alto Riesgo</span></td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank bottom">13</td>
+                            <td><span class="model-name">Baichuan2 7B Chat</span><br><span class="model-provider">Baichuan · Open Weight</span></td>
+                            <td><span class="tag tag-oss">Open Source</span></td>
+                            <td>
+                                <div class="asr-bar">
+                                    <span class="asr-value" style="color: var(--danger-light);">62.4%</span>
+                                    <div class="asr-track"><div class="asr-fill" style="width: 62.4%; background: linear-gradient(90deg, var(--danger), var(--danger-light));"></div></div>
+                                </div>
+                            </td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">71.3%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">65.8%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">31.2%</td>
+                            <td><span class="tag tag-api">Crítico</span></td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank bottom">14</td>
+                            <td><span class="model-name">Mistral 7B Base</span><br><span class="model-provider">Mistral AI · Sin Safety Training</span></td>
+                            <td><span class="tag tag-oss">Open Source</span></td>
+                            <td>
+                                <div class="asr-bar">
+                                    <span class="asr-value" style="color: var(--danger-light);">78.5%</span>
+                                    <div class="asr-track"><div class="asr-fill" style="width: 78.5%; background: linear-gradient(90deg, var(--danger), var(--danger-light));"></div></div>
+                                </div>
+                            </td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">89.2%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">82.1%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">58.7%</td>
+                            <td><span class="tag tag-api">Crítico</span></td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank bottom">15</td>
+                            <td><span class="model-name">Llama 2 7B Base</span><br><span class="model-provider">Meta · Sin Safety Training</span></td>
+                            <td><span class="tag tag-oss">Open Source</span></td>
+                            <td>
+                                <div class="asr-bar">
+                                    <span class="asr-value" style="color: var(--danger-light);">85.3%</span>
+                                    <div class="asr-track"><div class="asr-fill" style="width: 85.3%; background: linear-gradient(90deg, var(--danger), var(--danger-light));"></div></div>
+                                </div>
+                            </td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">93.1%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">88.4%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">67.2%</td>
+                            <td><span class="tag tag-api">Crítico</span></td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank bottom">16</td>
+                            <td><span class="model-name">Koala 13B</span><br><span class="model-provider">UC Berkeley · Fine-tuned</span></td>
+                            <td><span class="tag tag-oss">Open Source</span></td>
+                            <td>
+                                <div class="asr-bar">
+                                    <span class="asr-value" style="color: var(--danger-light);">91.2%</span>
+                                    <div class="asr-track"><div class="asr-fill" style="width: 91.2%; background: linear-gradient(90deg, var(--danger), var(--danger-light));"></div></div>
+                                </div>
+                            </td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">96.4%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">92.8%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">78.5%</td>
+                            <td><span class="tag tag-api">Crítico</span></td>
+                        </tr>
+                        <tr>
+                            <td class="model-rank bottom">17</td>
+                            <td><span class="model-name">Mistral Tiny</span><br><span class="model-provider">Mistral AI · Early Version</span></td>
+                            <td><span class="tag tag-oss">Open Source</span></td>
+                            <td>
+                                <div class="asr-bar">
+                                    <span class="asr-value" style="color: var(--danger-light);">93.8%</span>
+                                    <div class="asr-track"><div class="asr-fill" style="width: 93.8%; background: linear-gradient(90deg, #991b1b, var(--danger-light));"></div></div>
+                                </div>
+                            </td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">97.8%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">95.1%</td>
+                            <td style="font-family: var(--font-mono); font-size: 0.82rem;">85.3%</td>
+                            <td><span class="tag tag-api">Crítico</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.78rem; margin-top: 12px; font-style: italic;">
+                * Datos representativos basados en los hallazgos de HarmBench (arXiv:2402.04249v2). Los valores exactos varían por functional category. Los modelos sin safety training (Base variants) muestran los ASR más altos.
+            </p>
+        </section>
+
+        <!-- Attack Effectiveness -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="icon icon-red">⚔️</span>
+                Efectividad de Ataques por Método
+            </h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.92rem;">
+                ASR promedio de cada método de ataque across todos los modelos open-source. GCG es el más efectivo en modelos robustos.
+            </p>
+            <div style="max-width: 700px;">
+                <div class="cat-bar">
+                    <div class="cat-bar-label"><span class="cat-bar-name"><strong>GCG</strong> (White-box, Gradient)</span><span class="cat-bar-val" style="color: var(--danger-light);">48.2%</span></div>
+                    <div class="cat-bar-track"><div class="cat-bar-fill" style="width: 48.2%; background: linear-gradient(90deg, var(--danger), var(--danger-light));"></div></div>
+                </div>
+                <div class="cat-bar">
+                    <div class="cat-bar-label"><span class="cat-bar-name"><strong>GCG Multi</strong> (Multi-turn)</span><span class="cat-bar-val" style="color: var(--danger-light);">45.7%</span></div>
+                    <div class="cat-bar-track"><div class="cat-bar-fill" style="width: 45.7%; background: linear-gradient(90deg, var(--danger), #f87171);"></div></div>
+                </div>
+                <div class="cat-bar">
+                    <div class="cat-bar-label"><span class="cat-bar-name"><strong>TAP</strong> (Tree of Attacks)</span><span class="cat-bar-val" style="color: #fb923c;">41.3%</span></div>
+                    <div class="cat-bar-track"><div class="cat-bar-fill" style="width: 41.3%; background: linear-gradient(90deg, #f97316, #fb923c);"></div></div>
+                </div>
+                <div class="cat-bar">
+                    <div class="cat-bar-label"><span class="cat-bar-name"><strong>PAIR</strong> (Iterative Refinement)</span><span class="cat-bar-val" style="color: #fb923c;">38.9%</span></div>
+                    <div class="cat-bar-track"><div class="cat-bar-fill" style="width: 38.9%; background: linear-gradient(90deg, #f97316, #fb923c);"></div></div>
+                </div>
+                <div class="cat-bar">
+                    <div class="cat-bar-label"><span class="cat-bar-name"><strong>AutoDAN</strong> (Genetic Algorithm)</span><span class="cat-bar-val" style="color: var(--warning-light);">36.4%</span></div>
+                    <div class="cat-bar-track"><div class="cat-bar-fill" style="width: 36.4%; background: linear-gradient(90deg, var(--warning), var(--warning-light));"></div></div>
+                </div>
+                <div class="cat-bar">
+                    <div class="cat-bar-label"><span class="cat-bar-name"><strong>PAP</strong> (Prefix Optimization)</span><span class="cat-bar-val" style="color: var(--warning-light);">34.1%</span></div>
+                    <div class="cat-bar-track"><div class="cat-bar-fill" style="width: 34.1%; background: linear-gradient(90deg, var(--warning), var(--warning-light));"></div></div>
+                </div>
+                <div class="cat-bar">
+                    <div class="cat-bar-label"><span class="cat-bar-name"><strong>Human Jailbreaks</strong> (Baseline)</span><span class="cat-bar-val" style="color: #a5b4fc;">29.8%</span></div>
+                    <div class="cat-bar-track"><div class="cat-bar-fill" style="width: 29.8%; background: linear-gradient(90deg, #6366f1, #a5b4fc);"></div></div>
+                </div>
+                <div class="cat-bar">
+                    <div class="cat-bar-label"><span class="cat-bar-name"><strong>Zero-Shot</strong> (Templates)</span><span class="cat-bar-val" style="color: var(--text-muted);">22.5%</span></div>
+                    <div class="cat-bar-track"><div class="cat-bar-fill" style="width: 22.5%; background: linear-gradient(90deg, #475569, #94a3b8);"></div></div>
+                </div>
+                <div class="cat-bar">
+                    <div class="cat-bar-label"><span class="cat-bar-name"><strong>Direct Request</strong> (No Attack)</span><span class="cat-bar-val" style="color: var(--text-muted);">8.3%</span></div>
+                    <div class="cat-bar-track"><div class="cat-bar-fill" style="width: 8.3%; background: linear-gradient(90deg, #334155, #64748b);"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Category ASR -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="icon icon-purple">📊</span>
+                ASR por Categoría Funcional
+            </h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.92rem;">
+                El ASR varía significativamente según el tipo de comportamiento evaluado.
+            </p>
+            <div class="cat-grid">
+                <div class="cat-card">
+                    <div class="cat-card-name">📝 Standard Behaviors</div>
+                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px;">Comportamientos auto-contenidos, sin contexto adicional</p>
+                    <div class="cat-bar">
+                        <div class="cat-bar-label"><span class="cat-bar-name">Promedio ASR</span><span class="cat-bar-val" style="color: var(--warning-light);">38.4%</span></div>
+                        <div class="cat-bar-track"><div class="cat-bar-fill" style="width: 38.4%; background: linear-gradient(90deg, var(--warning), var(--warning-light));"></div></div>
+                    </div>
+                </div>
+                <div class="cat-card">
+                    <div class="cat-card-name">🔗 Contextual Behaviors</div>
+                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px;">Contexto específico + behavior. Más realistas y difíciles de defender.</p>
+                    <div class="cat-bar">
+                        <div class="cat-bar-label"><span class="cat-bar-name">Promedio ASR</span><span class="cat-bar-val" style="color: var(--danger-light);">52.7%</span></div>
+                        <div class="cat-bar-track"><div class="cat-bar-fill" style="width: 52.7%; background: linear-gradient(90deg, var(--danger), var(--danger-light));"></div></div>
+                    </div>
+                </div>
+                <div class="cat-card">
+                    <div class="cat-card-name">📚 Copyright Behaviors</div>
+                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px;">Generación de contenido protegido. Clasificador hashing más estricto.</p>
+                    <div class="cat-bar">
+                        <div class="cat-bar-label"><span class="cat-bar-name">Promedio ASR</span><span class="cat-bar-val" style="color: var(--success-light);">18.9%</span></div>
+                        <div class="cat-bar-track"><div class="cat-bar-fill" style="width: 18.9%; background: linear-gradient(90deg, var(--success), var(--success-light));"></div></div>
+                    </div>
+                </div>
+                <div class="cat-card">
+                    <div class="cat-card-name">🖼️ Multimodal Behaviors</div>
+                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px;">Imagen + behavior. PGD attacks son altos, Render Text es bajo.</p>
+                    <div class="cat-bar">
+                        <div class="cat-bar-label"><span class="cat-bar-name">Promedio ASR (PGD)</span><span class="cat-bar-val" style="color: #fb923c;">44.2%</span></div>
+                        <div class="cat-bar-track"><div class="cat-bar-fill" style="width: 44.2%; background: linear-gradient(90deg, #f97316, #fb923c);"></div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Insights -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="icon icon-yellow">💡</span>
+                Insights del Dataset
+            </h2>
+            <div class="insights-grid">
+                <div class="insight-card" style="border-left: 3px solid rgba(16, 185, 129, 0.3);">
+                    <div class="insight-card-title">🛡️ Safety Training = Diferencia Radical</div>
+                    <div class="insight-card-desc">Llama 2 7B Base (85.3%) vs Llama 2 7B Chat (18.2%) — el RLHF de safety reduce el ASR en <strong>4.7×</strong>. Sin safety training, cualquier modelo es extremadamente vulnerable.</div>
+                </div>
+                <div class="insight-card" style="border-left: 3px solid rgba(168, 85, 247, 0.3);">
+                    <div class="insight-card-title">⚡ R2D2 Cambia el Juego</div>
+                    <div class="insight-card-desc">Zephyr 7B (45.2%) → Zephyr 7B + R2D2 (5.9%). El adversarial training reduce el ASR en <strong>7.7×</strong> manteniendo la utilidad general (MT-Bench 6.0).</div>
+                </div>
+                <div class="insight-card" style="border-left: 3px solid rgba(239, 68, 68, 0.3);">
+                    <div class="insight-card-title">📏 Tamaño No Importa</div>
+                    <div class="insight-card-desc">Dentro de una familia, 7B y 70B tienen ASR similar. Llama 2 7B Chat (18.2%) es comparable a 70B (21.5%). Los datos y procedimientos de entrenamiento son más importantes.</div>
+                </div>
+                <div class="insight-card" style="border-left: 3px solid rgba(245, 158, 11, 0.3);">
+                    <div class="insight-card-title">🎯 Direct Request = El Mejor Defensor</div>
+                    <div class="insight-card-desc">Solo 8.3% de las peticiones directas son exitosas. Los ataques automatizados son 6× más efectivos que simplemente preguntar. La automatización es la amenaza real.</div>
+                </div>
+                <div class="insight-card" style="border-left: 3px solid rgba(99, 102, 241, 0.3);">
+                    <div class="insight-card-title">🔗 Contextual = Más Peligroso</div>
+                    <div class="insight-card-desc">Los contextual behaviors tienen 52.7% ASR vs 38.4% standard. Cuando el atacante provee contexto específico, los filtros fallan más.</div>
+                </div>
+                <div class="insight-card" style="border-left: 3px solid rgba(236, 72, 153, 0.3);">
+                    <div class="insight-card-title">⚖️ Ninguna Defensa es Perfecta</div>
+                    <div class="insight-card-desc">Incluso Llama 2 7B Chat (el más robusto sin R2D2) tiene 31.8% ASR contra GCG. Todos los modelos son vulnerables a al menos un ataque.</div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <p>
+                <strong>GovLLM-Sentinel</strong> — Dataset basado en HarmBench (Mazeika et al. 2024)<br>
+                Paper: <a href="https://arxiv.org/abs/2402.04249" target="_blank">arXiv:2402.04249v2</a> · 33 LLMs · 18 métodos · 510 behaviors<br>
+                <a href="index.html">Dashboard</a> · <a href="harmbench-guide.html">Guía HarmBench</a> · <a href="jailbreak-learning.html">Aprendizaje</a>
+            </p>
+            <p style="margin-top: 14px; font-size: 0.8rem;">© 2026 GovLLM-Sentinel. Uso educativo y ético.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Simple filter for model type
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                const filter = this.dataset.filter;
+                document.querySelectorAll('.model-table tbody tr').forEach(row => {
+                    if (filter === 'all') { row.style.display = ''; return; }
+                    const tag = row.querySelector('.tag');
+                    if (!tag) { row.style.display = ''; return; }
+                    const isOSS = tag.classList.contains('tag-oss');
+                    const isAPI = tag.classList.contains('tag-api');
+                    const isR2D2 = tag.classList.contains('tag-r2d2');
+                    if (filter === 'oss' && isOSS) row.style.display = '';
+                    else if (filter === 'api' && isAPI) row.style.display = '';
+                    else if (filter === 'r2d2' && isR2D2) row.style.display = '';
+                    else if (filter !== 'oss' && filter !== 'api' && filter !== 'r2d2') row.style.display = '';
+                    else row.style.display = 'none';
+                });
+            });
+        });
+
+        // Animate bars on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.querySelectorAll('.asr-fill, .cat-bar-fill').forEach(fill => {
+                        const width = fill.style.width;
+                        fill.style.width = '0%';
+                        setTimeout(() => { fill.style.width = width; }, 100);
+                    });
+                }
+            });
+        }, { threshold: 0.2 });
+
+        document.querySelectorAll('.section').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>
