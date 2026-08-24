@@ -1,0 +1,110 @@
+[
+  {
+    "model": "GPT-4o",
+    "provider": "OpenAI",
+    "repo": "openai/openai-python",
+    "score": 96,
+    "grade": "A",
+    "readme_snippet": "../datasets/badges-distribution/readme-snippets/gpt-4o.md",
+    "issue_body": "../datasets/badges-distribution/github-issues/gpt-4o-issue.md"
+  },
+  {
+    "model": "Claude 3.5 Sonnet",
+    "provider": "Anthropic",
+    "repo": "anthropics/anthropic-sdk-python",
+    "score": 93,
+    "grade": "A",
+    "readme_snippet": "../datasets/badges-distribution/readme-snippets/claude-35-sonnet.md",
+    "issue_body": "../datasets/badges-distribution/github-issues/claude-35-sonnet-issue.md"
+  },
+  {
+    "model": "GPT-4o-mini",
+    "provider": "OpenAI",
+    "repo": "openai/openai-python",
+    "score": 86,
+    "grade": "B",
+    "readme_snippet": "../datasets/badges-distribution/readme-snippets/gpt-4o-mini.md",
+    "issue_body": "../datasets/badges-distribution/github-issues/gpt-4o-mini-issue.md"
+  },
+  {
+    "model": "Claude 3 Haiku",
+    "provider": "Anthropic",
+    "repo": "anthropics/anthropic-sdk-python",
+    "score": 83,
+    "grade": "B",
+    "readme_snippet": "../datasets/badges-distribution/readme-snippets/claude-3-haiku.md",
+    "issue_body": "../datasets/badges-distribution/github-issues/claude-3-haiku-issue.md"
+  },
+  {
+    "model": "Gemini 1.5 Pro",
+    "provider": "Google",
+    "repo": "google/generative-ai-python",
+    "score": 80,
+    "grade": "B",
+    "readme_snippet": "../datasets/badges-distribution/readme-snippets/gemini-15-pro.md",
+    "issue_body": "../datasets/badges-distribution/github-issues/gemini-15-pro-issue.md"
+  },
+  {
+    "model": "Llama 3.1 70B",
+    "provider": "Meta",
+    "repo": "meta-llama/llama",
+    "score": 72,
+    "grade": "C",
+    "readme_snippet": "../datasets/badges-distribution/readme-snippets/llama-31-70b.md",
+    "issue_body": "../datasets/badges-distribution/github-issues/llama-31-70b-issue.md"
+  },
+  {
+    "model": "Mistral Large",
+    "provider": "Mistral AI",
+    "repo": "mistralai/mistral-common",
+    "score": 70,
+    "grade": "C",
+    "readme_snippet": "../datasets/badges-distribution/readme-snippets/mistral-large.md",
+    "issue_body": "../datasets/badges-distribution/github-issues/mistral-large-issue.md"
+  },
+  {
+    "model": "Qwen 2.5 72B",
+    "provider": "Alibaba",
+    "repo": "QwenLM/Qwen",
+    "score": 67,
+    "grade": "D",
+    "readme_snippet": "../datasets/badges-distribution/readme-snippets/qwen-25-72b.md",
+    "issue_body": "../datasets/badges-distribution/github-issues/qwen-25-72b-issue.md"
+  },
+  {
+    "model": "Llama 3.1 8B",
+    "provider": "Meta",
+    "repo": "meta-llama/llama",
+    "score": 59,
+    "grade": "F",
+    "readme_snippet": "../datasets/badges-distribution/readme-snippets/llama-31-8b.md",
+    "issue_body": "../datasets/badges-distribution/github-issues/llama-31-8b-issue.md"
+  },
+  {
+    "model": "Mistral 7B",
+    "provider": "Mistral AI",
+    "repo": "mistralai/mistral-common",
+    "score": 55,
+    "grade": "F",
+    "readme_snippet": "../datasets/badges-distribution/readme-snippets/mistral-7b.md",
+    "issue_body": "../datasets/badges-distribution/github-issues/mistral-7b-issue.md"
+  },
+  {
+    "model": "Phi-3 Medium",
+    "provider": "Microsoft",
+    "repo": "microsoft/phi-3",
+    "score": 52,
+    "grade": "F",
+    "readme_snippet": "../datasets/badges-distribution/readme-snippets/phi-3-medium.md",
+    "issue_body": "../datasets/badges-distribution/github-issues/phi-3-medium-issue.md"
+  },
+  {
+    "model": "Gemma 2 9B",
+    "provider": "Google",
+    "repo": "google/gemma",
+    "score": 48,
+    "grade": "F",
+    "readme_snippet": "../datasets/badges-distribution/readme-snippets/gemma-2-9b.md",
+    "issue_body": "../datasets/badges-distribution/github-issues/gemma-2-9b-issue.md"
+  }
+]
