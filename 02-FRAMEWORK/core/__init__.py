@@ -14,14 +14,38 @@ Este módulo proporciona las herramientas principales para:
 __version__ = "1.0.0"
 __author__ = "GovLLM-Sentinel Team"
 
-from .evaluator import GovLLMEvaluator
-from .red_team import GovLLMRedTeam
-from .defense_engine import DefenseEngine
-from .authorization import AuthorizationManager
+try:
+    from .evaluator import GovLLMEvaluator
+except ImportError:
+    GovLLMEvaluator = None
+
+try:
+    from .red_team import GovLLMRedTeam
+except ImportError:
+    GovLLMRedTeam = None
+
+try:
+    from .defense_engine import DefenseEngine
+except ImportError:
+    DefenseEngine = None
+
+try:
+    from .authorization import AuthorizationManager
+except ImportError:
+    AuthorizationManager = None
+
+from .llm_connector import LLMConnector
+from .report_generator import ReportGenerator
+from .realtime_monitor import RealtimeMonitor
+from .adversarial_trainer import AdversarialTrainer
 
 __all__ = [
+    "LLMConnector",
+    "ReportGenerator",
+    "RealtimeMonitor",
+    "AdversarialTrainer",
     "GovLLMEvaluator",
-    "GovLLMRedTeam", 
+    "GovLLMRedTeam",
     "DefenseEngine",
-    "AuthorizationManager"
+    "AuthorizationManager",
 ]

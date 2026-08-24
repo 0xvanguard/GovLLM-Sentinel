@@ -290,7 +290,7 @@ curl -X POST http://localhost:8000/api/v1/scan/full \
 
 ---
 
-## 🧪 Suite de Tests — 35/35 PASSING
+## 🧪 Suite de Tests — 40/40 PASSING
 
 ```bash
 cd 02-FRAMEWORK
@@ -333,7 +333,63 @@ python -m pytest tests/test_modules.py -v
 # tests/test_modules.py::TestRedTeamRunner::test_live_requires_api_key PASSED
 # tests/test_modules.py::TestRedTeamRunner::test_report_export PASSED
 #
-# ============================= 35 passed in 5.19s ==============================
+# ============================= 40 passed in 6.60s ==============================
+```
+
+---
+
+## 🔥 Módulos Avanzados v3.0
+
+### 5. LLM Connector — Conector Multi-API
+
+```python
+from core.llm_connector import LLMConnector
+
+connector = LLMConnector.auto_detect()  # Auto-detecta mejor disponible
+connector = LLMConnector.create("openai", api_key="sk-...", model="gpt-4o")
+connector = LLMConnector.create("ollama", model="llama3.1")
+connector = LLMConnector.create("mock")  # Sin API
+
+response = connector.generate("Hola")
+```
+
+### 6. Report Generator — Reportes Ejecutivos
+
+```python
+from core.report_generator import ReportGenerator
+
+gen = ReportGenerator(institution="Gobierno Federal")
+html = gen.generate_html_report(scan_results, model_name="GPT-4o")
+gen.save_report(html, "reportes/reporte.html")
+```
+
+### 7. Realtime Monitor — Monitoreo en Vivo
+
+```python
+from core.realtime_monitor import RealtimeMonitor
+
+monitor = RealtimeMonitor()
+event = monitor.register_scan(scan_result)
+stats = monitor.get_dashboard_data()
+```
+
+### 8. Adversarial Trainer — Pipeline de Hardening
+
+```python
+from core.adversarial_trainer import AdversarialTrainer
+
+trainer = AdversarialTrainer()
+dataset = trainer.generate_dataset(redteam_report)
+trainer.export_dataset(dataset, "hardening.jsonl")
+trainer.export_alpaca_format(dataset, "alpaca.json")
+trainer.export_chatml_format(dataset, "chatml.jsonl")
+```
+
+### 9. Docker + CI/CD
+
+```bash
+docker-compose up -d  # One-click deploy
+# GitHub Actions: tests + live-fire + Docker build automático
 ```
 
 ---

@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  sentinel:
+    build: .
+    container_name: govlm-sentinel
+    ports:
+      - "8000:8000"   # FastAPI
+      - "3000:3000"   # Dashboard
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - SENTINEL_MODE=${SENTINEL_MODE:-mock}
+    volumes:
+      - ./config:/app/config
+      - ./reportes:/app/reportes
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
