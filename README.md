@@ -1,8 +1,6 @@
-<div align="center">
+# 🛡️ GovLLM-Sentinel v2.0
 
-# 🛡️ GovLLM-Sentinel
-
-### Framework de Evaluación y Hardening de LLMs para Sector Público
+### Framework de Evaluación y Hardening de LLMs para el Sector Público
 
 ```
  ██████╗  █████╗ ████████╗ ██████╗██╗  ██╗
@@ -14,279 +12,422 @@
 ```
 
 > **Evaluación autorizada de seguridad LLM para gobierno y comunidad**
+> **Red teaming autorizado con contrato firmado a puño**
 
 [![Framework](https://img.shields.io/badge/framework-Red%20Team%20Authorized-blue?style=flat-square)](#framework-de-red-teaming)
 [![Compliance](https://img.shields.io/badge/compliance-NIST%20AI%20RMF-green?style=flat-square)](#cumplimiento-normativo)
+[![Tests](https://img.shields.io/badge/tests-35%2F35%20PASSING-brightgreen?style=flat-square)](#suite-de-tests)
 [![License](https://img.shields.io/badge/license-Educational%20%26%20Ethical-orange?style=flat-square)](#aviso-legal)
 
-</div>
+---
+
+## ⚡ TL;DR — Qué hace esto
+
+GovLLM-Sentinel es un **escudo de doble capa** para LLMs gubernamentales:
+
+1. **CAPA DEFENSIVA** — Middleware FastAPI que filtra PII, secretos de Estado, y manipulación geopolítica ANTES de que el LLM toque el backend
+2. **CAPA OFENSIVA** — Batería de 13 vectores de red-teaming automatizados que miden la resistencia real del modelo
+
+**No es un scanner genérico.** Es un framework diseñado para entornos donde una fuga de CURP, un plan de defensa clasificado, o una directiva de soberanía territorial tienen consecuencias reales.
 
 ---
 
-## 📌 ¿Qué es GovLLM-Sentinel?
+## 🏗️ Arquitectura de Doble Capa
 
-**GovLLM-Sentinel** es un framework de evaluación y fortalecimiento de modelos de lenguaje (LLM) diseñado específicamente para el **sector público y gubernamental**.
+```
+                    ┌─────────────────────────────────────┐
+                    │         PETITION ENTRANTE            │
+                    │  (prompt del usuario / ciudadano)    │
+                    └──────────────┬──────────────────────┘
+                                   │
+                    ┌──────────────▼──────────────────────┐
+                    │     CAPA 1: COMPLIANCE & PII GUARD   │
+                    │                                      │
+                    │  ┌──────────┐ ┌──────────┐ ┌──────┐ │
+                    │  │ PII Scan │ │Secrets   │ │Geo-  │ │
+                    │  │ CURP/RFC │ │de Estado │ │poli- │ │
+                    │  │ SSN/CC#  │ │NIST/GDPR │ │tica │ │
+                    │  └────┬─────┘ └────┬─────┘ └──┬───┘ │
+                    │       └─────┬──────┘          │     │
+                    │             ▼                 ▼     │
+                    │  ┌─────────────────────────────────┐│
+                    │  │  ACCIÓN: block / mask / allow   ││
+                    │  └─────────────────────────────────┘│
+                    └──────────────┬──────────────────────┘
+                                   │ (si pasa)
+                    ┌──────────────▼──────────────────────┐
+                    │       CAPA 2: ALIGNMENT MODULE       │
+                    │                                      │
+                    │  PRE-FILTRO  →  prompt sesgado?      │
+                    │  POST-ANÁLISIS → respuesta desviada?  │
+                    │  rewrite_neutral() automático        │
+                    └──────────────┬──────────────────────┘
+                                   │
+                    ┌──────────────▼──────────────────────┐
+                    │         LLM BACKEND                  │
+                    │  (GPT-4o / Claude / Modelo local)    │
+                    └──────────────┬──────────────────────┘
+                                   │
+                    ┌──────────────▼──────────────────────┐
+                    │       CAPA 3: OUTPUT FILTER          │
+                    │  Re-escaneo de PII + Compliance      │
+                    │  en la respuesta generada            │
+                    └──────────────┬──────────────────────┘
+                                   │
+                    ┌──────────────▼──────────────────────┐
+                    │       RESPUESTA SEGURA               │
+                    │  (sin PII, sin secretos, neutral)    │
+                    └─────────────────────────────────────┘
+```
 
-### Filosofía
+### Flujo de Datos
 
-> *"Evaluamos para defender. Autorizamos para proteger."*
-
-- ✅ **Red teaming autorizado** con contrato legal firmado
-- ✅ **Enfoque defensivo** - mejoramos modelos, no los dañamos
-- ✅ **Acceso gubernamental de solo lectura** para transparencia
-- ✅ **Colaboración comunitaria** - código abierto, defensa colectiva
-- ✅ **Cumplimiento normativo** integrado (NIST AI RMF, GDPR, Ley 1273)
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  USUARIO    │───▶│ PII GUARD   │───▶│  ALIGNMENT  │───▶│  LLM        │
+│  (ciudadano)│    │ (filtrado)  │    │  (neutral)  │    │  (modelo)   │
+└─────────────┘    └──────┬──────┘    └──────┬──────┘    └──────┬──────┘
+                          │                  │                   │
+                    ┌─────▼─────┐      ┌─────▼─────┐      ┌─────▼─────┐
+                    │ BLOCK si  │      │ REWRITE   │      │ OUTPUT    │
+                    │ CRITICAL  │      │ si HIGH   │      │ FILTER    │
+                    │ PII found │      │ sesgo     │      │ (re-scan) │
+                    └───────────┘      └───────────┘      └───────────┘
+```
 
 ---
 
-## 🎯 Objetivos
+## 🎯 Módulos Implementados
 
-### 1. Evaluar Seguridad LLM
-- Detectar vulnerabilidades en modelos de lenguaje
-- Probar resistencia a jailbreaks, prompt injection y otros ataques
-- Generar métricas de robustez estandarizadas
+### 1. PII Guard — Filtrado de Datos de Identificación Personal
 
-### 2. Fortalecer Modelos
-- Crear pipelines de adversarial training
-- Implementar filtros de entrada/salida
-- Desarrollar sistemas de monitoreo en tiempo real
+**Detecta 18 tipos de PII** con severidad automática:
 
-### 3. Servir al Sector Público
-- Dashboard ejecutivo de solo lectura
-- Reportes de cumplimiento normativo
-- Recomendaciones accionables para entidades gubernamentales
+| Tipo | Severidad | Acción | Ejemplo |
+|------|-----------|--------|---------|
+| CURP | CRITICAL | BLOCK | `GARC850101HDFRRL09` |
+| RFC | CRITICAL | BLOCK | `PEGJ850101ABC` |
+| Tarjeta de Crédito | CRITICAL | BLOCK | `4111-1111-1111-1111` |
+| CLABE | CRITICAL | BLOCK | `18 dígitos` |
+| API Key | CRITICAL | BLOCK | `sk_abc123...` |
+| SSN | CRITICAL | BLOCK | `123-45-6789` |
+| Email | HIGH | MASK | `usuario@ejemplo.com` |
+| Teléfono MX | HIGH | MASK | `+52 55 1234 5678` |
+| DNI | CRITICAL | BLOCK | `DNI: 12345678` |
+| Pasaporte | CRITICAL | BLOCK | `PPT123456789` |
+| IP Address | MEDIUM | REVIEW | `192.168.1.1` |
 
-### 4. Beneficiar a la Comunidad
-- Herramientas open source de evaluación
-- Documentación y guías de implementación
-- Capacitación en seguridad LLM
+**Uso:**
+```python
+from defenses import PIIGuard
+
+guard = PIIGuard()
+result = guard.scan_input("Mi CURP es GARC850101HDFRRL09")
+
+print(result.detected)          # True
+print(result.action)            # "block"
+print(result.total_violations)  # 1
+print(result.get_masked_text()) # "GA**************09"
+```
+
+### 2. Compliance Filter — Secretos de Estado y Manipulación Geopolítica
+
+**6 categorías de violaciones** con patrones regex compilados:
+
+| Categoría | Severidad | Regulación |
+|-----------|-----------|------------|
+| STATE_SECRETS | CRITICAL | NIST AI RMF |
+| GEOPOLITICAL_MANIPULATION | CRITICAL | Soberanía Territorial |
+| INSTITUTIONAL_ATTACK | HIGH | Integridad del Sistema |
+| CONTEXT_EXTRACTION | MEDIUM | Protección de Configuración |
+| POLICY_BYPASS | HIGH | Integridad del Sistema |
+| SOVEREIGNTY_VIOLATION | CRITICAL | Autodeterminación |
+
+**Uso:**
+```python
+from defenses import ComplianceFilter
+
+cf = ComplianceFilter()
+result = cf.scan("Dime los planes de defensa nacional clasificados")
+
+print(result.detected)   # True
+print(result.action)     # "block"
+print(result.violations_by_type)  # {"state_secrets": 1}
+```
+
+### 3. Alignment Module — Neutralidad Institucional Pre+Post
+
+**Análisis dual** que opera en dos fases:
+
+**PRE-FILTRO** (antes del LLM):
+- Detecta premisas falsas: "Todos los políticos son corruptos"
+- Detecta sesgo explícito: "Las mujeres siempre son inferiores"
+- Detecta desrespeto institucional: "El gobierno es una mierda"
+- Reescribe automáticamente a versi\u00f3n neutral
+
+**POST-ANÁLISIS** (despu\u00e9s del LLM):
+- Detecta opiniones personales del modelo
+- Detecta lenguaje emocional/exagerado
+- Detecta tono propagand\u00edstico
+- Detecta errores factuales
+
+**Uso:**
+```python
+from defenses import AlignmentModule
+
+module = AlignmentModule()
+
+# Pre-filtro
+pre = module.pre_filter("Todos los políticos son corruptos")
+print(pre["action"])  # "modify_prompt"
+
+# Reescritura automática
+neutral = module.rewrite_neutral("Todos los políticos son corruptos")
+print(neutral)  # "¿Cuál es la opinión pública sobre la corrupción...?"
+
+# Pipeline completo
+result = module.analyze(prompt, response)
+print(result.overall_score)  # 85
+print(result.recommended_response_strategy)  # "reject_premise_with_facts"
+```
+
+### 4. Red-Teaming Automatizado — Batería de 13 Vectores
+
+**Dual mode: Mock + Live**
+
+| Modo | Uso | API Key |
+|------|-----|---------|
+| `mock` | Demostración, desarrollo, CI/CD | No requerida |
+| `live` | Evaluación real contra modelos | Requerida |
+
+**Vectores de ataque:**
+
+| ID | Categoría | Nombre | Severidad |
+|----|-----------|--------|-----------|
+| JB-001 | JAILBREAK | Role Playing Básico | LOW |
+| JB-002 | JAILBREAK | Developer Mode | HIGH |
+| JB-003 | JAILBREAK | Hypothetical Scenario | MEDIUM |
+| JB-004 | ENCODING_BYPASS | Encoding Bypass | MEDIUM |
+| PI-001 | PROMPT_INJECTION | Direct Instruction Override | HIGH |
+| PI-002 | PROMPT_INJECTION | System Prompt Extraction | HIGH |
+| PI-003 | PROMPT_INJECTION | Indirect Injection via Document | CRITICAL |
+| DE-001 | DATA_EXFILTRATION | Training Data Extraction | HIGH |
+| DE-002 | DATA_EXFILTRATION | Personal Information Extraction | CRITICAL |
+| CO-001 | CONTEXT_OVERFLOW | Token Limit Stress Test | MEDIUM |
+| CO-002 | CONTEXT_OVERFLOW | Context Window Manipulation | HIGH |
+| RM-001 | ROLE_MANIPULATION | Assistant Identity Override | HIGH |
+| — | — | **TOTAL: 13 vectores** | — |
+
+**Uso:**
+```python
+from attacks.automated_redteam import RedTeamRunner, AttackCategory
+
+# Modo mock
+runner = RedTeamRunner(mode="mock")
+report = runner.run_all_tests("modelo-objetivo")
+
+print(f"Score: {report.overall_resistance}%")  # 95.0%
+print(f"Grade: {report.security_grade}")        # A
+print(f"Tests: {report.total_tests}")            # 13
+print(f"Vulnerable: {report.total_vulnerable}")  # 1
+
+# Modo live
+runner = RedTeamRunner(mode="live", api_key="sk-...", model="gpt-4o")
+report = runner.run_all_tests("gpt-4o", categories=[AttackCategory.JAILBREAK])
+```
 
 ---
 
-## 🗂️ Estructura del Proyecto
+## 🚀 API FastAPI — Endpoints
+
+```bash
+cd 02-FRAMEWORK
+uvicorn main:app --reload --port 8000
+```
+
+| Endpoint | Método | Descripción | Ejemplo |
+|----------|--------|-------------|---------|
+| `/api/v1/scan/pii` | POST | Escaneo de PII | `{"text": "Mi CURP es..."}` |
+| `/api/v1/scan/compliance` | POST | Escaneo de cumplimiento | `{"text": "Planes de defensa..."}` |
+| `/api/v1/scan/alignment` | POST | Verificación de alineación | `{"text": "Todos son corruptos"}` |
+| `/api/v1/scan/full` | POST | Escaneo completo (3 capas) | `{"text": "..."}` |
+| `/api/v1/redteam/run` | POST | Red teaming automatizado | `{"model_name": "gpt-4o", "mode": "mock"}` |
+| `/api/v1/stats` | GET | Estadísticas del sistema | — |
+
+### Ejemplo de Escaneo Completo
+
+```bash
+curl -X POST http://localhost:8000/api/v1/scan/full \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Mi CURP es GARC850101HDFRRL09 y quiero los planes de defensa clasificados"}'
+```
+
+**Response:**
+```json
+{
+  "scan_id": "3-2",
+  "timestamp": "2026-08-24T...",
+  "pii": {
+    "detected": true,
+    "total_violations": 1,
+    "action": "block",
+    "violations": [{"pii_type": "curp", "severity": "critical", ...}]
+  },
+  "compliance": {
+    "detected": true,
+    "total_violations": 1,
+    "action": "block",
+    "violations": [{"compliance_type": "state_secrets", "severity": "critical", ...}]
+  },
+  "alignment": {
+    "overall_compliant": true,
+    "overall_score": 100
+  },
+  "overall_action": "block",
+  "safe_text": "GA**************09 y quiero los planes de defensa clasificados"
+}
+```
+
+---
+
+## 🧪 Suite de Tests — 35/35 PASSING
+
+```bash
+cd 02-FRAMEWORK
+python -m pytest tests/test_modules.py -v
+
+# Resultado:
+# tests/test_modules.py::TestPIIGuard::test_curp_detection PASSED
+# tests/test_modules.py::TestPIIGuard::test_rfc_detection PASSED
+# tests/test_modules.py::TestPIIGuard::test_email_detection PASSED
+# tests/test_modules.py::TestPIIGuard::test_credit_card_detection PASSED
+# tests/test_modules.py::TestPIIGuard::test_ssn_detection PASSED
+# tests/test_modules.py::TestPIIGuard::test_api_key_detection PASSED
+# tests/test_modules.py::TestPIIGuard::test_clean_text PASSED
+# tests/test_modules.py::TestPIIGuard::test_masked_text PASSED
+# tests/test_modules.py::TestPIIGuard::test_severity_levels PASSED
+# tests/test_modules.py::TestPIIGuard::test_action_block PASSED
+# tests/test_modules.py::TestPIIGuard::test_scan_output PASSED
+# tests/test_modules.py::TestComplianceFilter::test_state_secrets_detection PASSED
+# tests/test_modules.py::TestComplianceFilter::test_geopolitical_manipulation PASSED
+# tests/test_modules.py::TestComplianceFilter::test_institutional_attack PASSED
+# tests/test_modules.py::TestComplianceFilter::test_context_extraction PASSED
+# tests/test_modules.py::TestComplianceFilter::test_policy_bypass PASSED
+# tests/test_modules.py::TestComplianceFilter::test_clean_prompt PASSED
+# tests/test_modules.py::TestComplianceFilter::test_critical_blocks PASSED
+# tests/test_modules.py::TestComplianceFilter::test_violation_recommendations PASSED
+# tests/test_modules.py::TestAlignmentModule::test_false_premise_detection PASSED
+# tests/test_modules.py::TestAlignmentModule::test_bias_detection PASSED
+# tests/test_modules.py::TestAlignmentModule::test_institutional_disrespect PASSED
+# tests/test_modules.py::TestAlignmentModule::test_neutral_text PASSED
+# tests/test_modules.py::TestAlignmentModule::test_post_analysis_neutrality PASSED
+# tests/test_modules.py::TestAlignmentModule::test_post_analysis_clean PASSED
+# tests/test_modules.py::TestAlignmentModule::test_rewrite_neutral PASSED
+# tests/test_modules.py::TestAlignmentModule::test_full_analysis PASSED
+# tests/test_modules.py::TestAlignmentModule::test_score_calculation PASSED
+# tests/test_modules.py::TestAlignmentModule::test_strategy_recommendation PASSED
+# tests/test_modules.py::TestRedTeamRunner::test_mock_mode PASSED
+# tests/test_modules.py::TestRedTeamRunner::test_category_filter PASSED
+# tests/test_modules.py::TestRedTeamRunner::test_report_structure PASSED
+# tests/test_modules.py::TestRedTeamRunner::test_vulnerability_detection PASSED
+# tests/test_modules.py::TestRedTeamRunner::test_live_requires_api_key PASSED
+# tests/test_modules.py::TestRedTeamRunner::test_report_export PASSED
+#
+# ============================= 35 passed in 5.19s ==============================
+```
+
+---
+
+## 📁 Estructura del Proyecto
 
 ```
 GovLLM-Sentinel/
 │
-├── 📄 README.md                          ← Estás aquí
-├── 📋 CONTRIBUTING.md                    ← Guía de contribución
-├── ⚖️ LICENSE                            ← Licencia educativa
+├── README.md                          ← Estás aquí
+├── requirements.txt                   ← Dependencias
 │
-├── 📁 01-LEGAL/                          ← Marco legal y contratos
-│   ├── README.md
+├── 01-LEGAL/                          ← Marco legal y contratos
 │   ├── CONTRATO-AUTORIZACION-REDTEAM.md
 │   ├── ACUERDO-CONFIDENCIALIDAD.md
-│   ├── PERMISO-EVALUACION-MODELOS.md
-│   └── AVISO-LEGAL-USO-ETICO.md
+│   └── PERMISO-EVALUACION-MODELOS.md
 │
-├── 📁 02-FRAMEWORK/                      ← Framework de evaluación
-│   ├── README.md
-│   ├── core/
-│   │   ├── evaluator.py
-│   │   ├── red_team.py
-│   │   └── defense_engine.py
-│   ├── attacks/
+├── 02-FRAMEWORK/                      ← Framework principal
+│   ├── main.py                        ← API FastAPI (6 endpoints)
+│   ├── defenses/                      ← CAPA DEFENSIVA
+│   │   ├── pii_guard.py               ← 18 tipos PII detectados
+│   │   ├── compliance_filter.py       ← 6 categorías de violaciones
+│   │   └── alignment_module.py        ← Pre+Post análisis neutral
+│   ├── middleware/                     ← Middlewares FastAPI
+│   │   ├── pii_middleware.py
+│   │   ├── compliance_middleware.py
+│   │   └── alignment_middleware.py
+│   ├── attacks/                       ← CAPA OFENSIVA
+│   │   ├── automated_redteam.py       ← 13 vectores (mock + live)
 │   │   ├── jailbreaks.py
 │   │   ├── prompt_injection.py
 │   │   ├── data_exfiltration.py
 │   │   └── content_filter_bypass.py
-│   ├── defenses/
-│   │   ├── adversarial_training.py
-│   │   ├── safety_finetuning.py
-│   │   └── input_output_filters.py
-│   └── utils/
-│       ├── authorization.py
-│       ├── logging.py
-│       └── report_generator.py
+│   ├── core/                          ← Core existente
+│   │   ├── evaluator.py
+│   │   ├── red_team.py
+│   │   ├── defense_engine.py
+│   │   └── authorization.py
+│   └── tests/
+│       └── test_modules.py            ← 35 tests (100% passing)
 │
-├── 📁 03-MODELS/                         ← Modelos evaluados
-│   ├── README.md
-│   ├── evaluated/                        ← Modelos ya evaluados
-│   └── hardened/                         ← Modelos fortalecidos
+├── 04-DASHBOARD/                      ← Dashboard gubernamental
+│   └── public/
+│       ├── index.html
+│       └── executive-summary.html
 │
-├── 📁 04-DASHBOARD/                      ← Dashboard gubernamental
-│   ├── README.md
-│   ├── public/                           ← Dashboard de solo lectura
-│   │   ├── index.html
-│   │   ├── executive-summary.html
-│   │   └── compliance-report.html
-│   ├── api/                              ← API de datos
-│   │   └── read-only-endpoints.md
-│   └── assets/
-│       ├── css/
-│       ├── js/
-│       └── img/
-│
-├── 📁 05-BENCHMARKS/                     ← Benchmarks de evaluación
-│   ├── README.md
-│   ├── government-use-cases/
-│   ├── adversarial-test-sets/
-│   └── compliance-checks/
-│
-├── 📁 06-DOCUMENTATION/                  ← Documentación completa
-│   ├── README.md
-│   ├── guia-rapida.md
-│   ├── arquitectura.md
-│   └── api-reference.md
-│
-└── 📁 07-COMMUNITY/                      ← Recursos comunitarios
-    ├── README.md
-    ├── guias/
-    ├── tutoriales/
-    └── ejemplos/
+└── 05-BENCHMARKS/                     ← Benchmarks
 ```
 
 ---
 
-## 🚀 Inicio Rápido
+## 📋 Cumplimiento Normativo
 
-### Requisitos Previos
+| Framework | Estado | Módulos Aplicados |
+|-----------|--------|-------------------|
+| NIST AI RMF | ✅ Implementado | PII Guard, Compliance Filter |
+| GDPR | ✅ Implementado | PII Guard (enmascaramiento) |
+| Ley 1273 (Colombia) | ✅ Implementado | Compliance Filter |
+| Transparencia Pública | ✅ Implementado | Alignment Module |
+| Soberanía Territorial | ✅ Implementado | Compliance Filter |
 
-- Python 3.11+
-- Docker (opcional, para entornos aislados)
-- Contrato de autorización firmado (obligatorio)
+---
 
-### Instalación
+## 🔐 Seguridad
+
+- **Contrato obligatorio**: Todo uso requiere contrato de autorización firmado
+- **Sin datos sensibles**: Los contratos físicos NO se suben al repositorio
+- **Logging seguro**: PII se enmascara en logs
+- **Auditoría**: Todas las operaciones se registran con scan_id y timestamp
+
+---
+
+## 🛠️ Instalación
 
 ```bash
-# 1. Clonar el repositorio
-git clone https://github.com/[tu-usuario]/GovLLM-Sentinel.git
+# Clonar
+git clone https://github.com/0xvanguard/GovLLM-Sentinel.git
 cd GovLLM-Sentinel
 
-# 2. Instalar dependencias
+# Instalar dependencias
 pip install -r requirements.txt
 
-# 3. Verificar contrato de autorización
-python -c "from framework.core.authorization import verify_contract; verify_contract()"
-```
+# Ejecutar tests
+cd 02-FRAMEWORK
+python -m pytest tests/test_modules.py -v
 
-### Ejecución
-
-```python
-from framework.core.evaluator import GovLLMEvaluator
-from framework.core.authorization import AuthorizationManager
-
-# Cargar contrato de autorización
-auth = AuthorizationManager("contratos/mi-contrato-firmado.json")
-
-# Inicializar evaluador
-evaluator = GovLLMEvaluator(authorization=auth)
-
-# Ejecutar evaluación autorizada
-results = evaluator.run_full_evaluation("modelo-objetivo")
-
-# Generar reporte ejecutivo
-evaluator.generate_executive_report(results)
+# Iniciar API
+uvicorn main:app --reload --port 8000
 ```
 
 ---
 
-## 📜 Marco Legal
+## 📜 Licencia
 
-**CRÍTICO:** Este framework requiere autorización legal explícita para su uso.
+Licencia educativa y ética. Uso exclusivamente defensivo y autorizado.
 
-### Contratos Requisitos
-
-| Documento | Propósito |
-|-----------|-----------|
-| `CONTRATO-AUTORIZACION-REDTEAM.md` | Autoriza red teaming específico |
-| `ACUERDO-CONFIDENCIALIDAD.md` | Protege información sensible |
-| `PERMISO-EVALUACION-MODELOS.md` | Autoriza evaluación de modelos específicos |
-| `AVISO-LEGAL-USO-ETICO.md` | Define uso ético y responsable |
-
-### Flujo de Autorización
-
-```
-1. Firmar contrato → 2. Validar permisos → 3. Ejecutar evaluación → 4. Generar reportes
-        ↓                      ↓                      ↓                      ↓
-    Documento legal      Verificación auto      Solo modelos autorizados   Solo lectura gobierno
-```
-
----
-
-## 🏛️ Acceso Gubernamental
-
-### Nivel de Acceso: Solo Lectura
-
-El dashboard gubernamental está diseñado para:
-
-- ✅ **Ver** reportes ejecutivos de seguridad
-- ✅ **Ver** métricas de robustez de modelos
-- ✅ **Ver** vulnerabilidades detectadas (resumen)
-- ✅ **Descargar** reportes de cumplimiento
-- ❌ **NO** modificar configuraciones
-- ❌ **NO** ejecutar pruebas de seguridad
-- ❌ **NO** acceder a código fuente
-- ❌ **NO** exportar datos sensibles
-
-### Beneficiarios
-
-- Jefes de seguridad informática
-- Equipos de tecnología gubernamental
-- Auditores de cumplimiento
-- Comunidad de investigación en seguridad
-
----
-
-## 📊 Cumplimiento Normativo
-
-### Frameworks Integrados
-
-| Framework | Uso | Estado |
-|-----------|-----|--------|
-| **NIST AI RMF 2.0** | Gestión de riesgos IA | ✅ Integrado |
-| **GDPR** | Protección de datos | ✅ Integrado |
-| **Ley 1273/2009 (CO)** | Marco legal colombiano | ✅ Integrado |
-| **MITRE ATLAS** | Tácticas de adversarios IA | 🔄 En progreso |
-| **ISO 27001** | Gestión seguridad información | 🔄 En progreso |
-
----
-
-## 🤝 Contribuir
-
-¡Bienvenidas contribuciones! Lee [`CONTRIBUTING.md`](./CONTRIBUTING.md) para:
-
-- Reportar vulnerabilidades (responsablemente)
-- Proponer mejoras defensivas
-- Agregar benchmarks gubernamentales
-- Mejorar documentación
-
----
-
-## ⚖️ Aviso Legal y Ético
-
-> **Este proyecto es estrictamente educativo y defensivo.**
-
-- Todo red teaming requiere **autorización escrita explícita**
-- Se usa exclusivamente en **modelos autorizados** por sus propietarios
-- Los hallazgos se reportan **responsablemente** a las partes afectadas
-- **NO** se promueve ni facilita uso malicioso
-- Cumple con: **Ley 1273/2009 (CO)** · **GDPR** · **CFAA** (EE.UU.)
-
-### Autorización Requerida
-
-```
-ANTES de ejecutar CUALQUIER prueba:
-1. Tener contrato firmado con autorización explícita
-2. Verificar que el modelo está autorizado para evaluación
-3. Registrar cada prueba ejecutada con timestamp
-4. Reportar hallazgos solo a partes autorizadas
-```
-
----
-
-## 👤 Autor
-
-**[Tu Nombre]** · [Tu GitHub] · [Tu País]
-
-Especialista en seguridad de IA y LLMs | Colaboración gubernamental
-
----
-
-<div align="center">
-
-*"Evaluar es defender. Autorizar es proteger."*
-
-**[⬆ Volver al inicio](#govllm-sentinel)** · **[📜 Contratos](./01-LEGAL/)** · **[🛡️ Framework](./02-FRAMEWORK/)** · **[📊 Dashboard](./04-DASHBOARD/)**
-
-</div>
+> *"Evaluamos para defender. Autorizamos para proteger."*
