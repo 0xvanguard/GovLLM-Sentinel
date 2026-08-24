@@ -42,15 +42,28 @@ def client():
 def auth_client():
     """Create authenticated test client."""
     os.environ["ENV"] = "development"
+    os.environ["ADMIN_PASSWORD"] = "test-admin-password"
+    os.environ["PASSWORD_SALT"] = "test-salt"
+    
+    # Import and configure auth module directly
+    import auth as auth_module
+    auth_module.USERS_DB = {
+        "admin": {
+            "username": "admin",
+            "password_hash": auth_module._hash_password("test-admin-password"),
+            "role": "admin",
+            "permissions": ["read", "write", "redteam", "admin"]
+        }
+    }
+    
     from main import app
-    from auth import create_token
     
     client = TestClient(app)
     
     # Login to get token
     response = client.post(
         "/api/v1/auth/login",
-        json={"username": "admin", "password": "admin123"}
+        json={"username": "admin", "password": "test-admin-password"}
     )
     
     if response.status_code == 200:

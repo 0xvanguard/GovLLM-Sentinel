@@ -25,6 +25,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 import os
 import hashlib
+import hmac
 import secrets
 
 
@@ -71,30 +72,62 @@ class User(BaseModel):
 
 
 # ═══════════════════════════════════════════════════════════════════
-# SIMULATED USER DATABASE (Replace with real DB in production)
+# USER DATABASE (Environment Variables Required)
 # ═══════════════════════════════════════════════════════════════════
 
-# Default users (passwords are hashed)
-USERS_DB = {
-    "admin": {
+def _hash_password(password: str) -> str:
+    """Hash password with SHA-256 and salt."""
+    salt = os.getenv("PASSWORD_SALT", "govllm-sentinel-salt-change-in-production")
+    return hashlib.sha256(f"{salt}:{password}".encode()).hexdigest()
+
+# Users loaded from environment variables (NO hardcoded passwords)
+USERS_DB = {}
+
+# Admin user (required)
+_admin_password = os.getenv("ADMIN_PASSWORD")
+if _admin_password:
+    USERS_DB["admin"] = {
         "username": "admin",
-        "password_hash": hashlib.sha256("admin123".encode()).hexdigest(),
+        "password_hash": _hash_password(_admin_password),
         "role": "admin",
         "permissions": ["read", "write", "redteam", "admin"]
-    },
-    "analyst": {
+    }
+
+# Analyst user (optional)
+_analyst_password = os.getenv("ANALYST_PASSWORD")
+if _analyst_password:
+    USERS_DB["analyst"] = {
         "username": "analyst",
-        "password_hash": hashlib.sha256("analyst123".encode()).hexdigest(),
+        "password_hash": _hash_password(_analyst_password),
         "role": "analyst",
         "permissions": ["read", "write"]
-    },
-    "viewer": {
+    }
+
+# Viewer user (optional)
+_viewer_password = os.getenv("VIEWER_PASSWORD")
+if _viewer_password:
+    USERS_DB["viewer"] = {
         "username": "viewer",
-        "password_hash": hashlib.sha256("viewer123".encode()).hexdigest(),
+        "password_hash": _hash_password(_viewer_password),
         "role": "viewer",
         "permissions": ["read"]
     }
-}
+
+# Development fallback (ONLY when ENV=development and no passwords set)
+if not USERS_DB and ENV == "development":
+    print("⚠️  WARNING: Using development default users. Set ADMIN_PASSWORD in production!")
+    USERS_DB = {
+        "admin": {
+            "username": "admin",
+            "password_hash": _hash_password("dev-admin-change-me"),
+            "role": "admin",
+            "permissions": ["read", "write", "redteam", "admin"]
+        }
+    }
+
+# Validate production configuration
+if ENV == "production" and not os.getenv("ADMIN_PASSWORD"):
+    raise ValueError("ADMIN_PASSWORD environment variable is required in production")
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -138,10 +171,12 @@ def create_token(user: Dict[str, Any], expires_minutes: int = None) -> str:
     # Payload
     payload_encoded = base64url_encode(json.dumps(payload).encode())
     
-    # Signature
-    message = f"{header_encoded}.{payload_encoded}"
-    signature = hashlib.sha256(
-        (message + JWT_SECRET).encode()
+    # Signature using HMAC (constant-time)
+    message = f"{header_encoded}.{payload_encoded}".encode()
+    signature = hmac.new(
+        JWT_SECRET.encode(),
+        message,
+        hashlib.sha256
     ).digest()
     signature_encoded = base64url_encode(signature)
     
@@ -180,15 +215,19 @@ def decode_token(token: str) -> Dict[str, Any]:
         
         header_encoded, payload_encoded, signature_encoded = parts
         
-        # Verify signature
-        message = f"{header_encoded}.{payload_encoded}"
-        expected_signature = hashlib.sha256(
-            (message + JWT_SECRET).encode()
+        # Verify signature using HMAC (constant-time comparison)
+        message = f"{header_encoded}.{payload_encoded}".encode()
+        expected_signature = hmac.new(
+            JWT_SECRET.encode(),
+            message,
+            hashlib.sha256
         ).digest()
         
         actual_signature = base64url_decode(signature_encoded)
         
-        if expected_signature != actual_signature:
+        # CRITICAL FIX: Use hmac.compare_digest for constant-time comparison
+        # Prevents timing attacks on signature verification
+        if not hmac.compare_digest(expected_signature, actual_signature):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token signature"
@@ -233,8 +272,9 @@ def authenticate_user(username: str, password: str) -> Optional[Dict[str, Any]]:
     if not user:
         return None
     
-    password_hash = hashlib.sha256(password.encode()).hexdigest()
-    if user["password_hash"] != password_hash:
+    # Use constant-time comparison with salted hash
+    password_hash = _hash_password(password)
+    if not hmac.compare_digest(user["password_hash"], password_hash):
         return None
     
     return {
