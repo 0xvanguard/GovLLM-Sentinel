@@ -4,8 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GovLLM-Sentinel - Dashboard de Seguridad</title>
+
+    <!-- Security Headers (VULN-004, VULN-005, VULN-013, VULN-014 fix) -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none';">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
+    <meta http-equiv="Strict-Transport-Security" content="max-age=31536000; includeSubDomains">
+    <meta name="robots" content="noindex, nofollow">
+    <!-- Logging Configuration (VULN-008 fix) -->
+    <meta name="app-logging" content="production">
+    <!-- VULN-012 fix -->
+    <meta name="app-version" content="hidden">
+    <!-- VULN-010 fix: Cookie Security Configuration -->
+    <meta name="cookie-secure" content="true">
+    <meta name="cookie-samesite" content="strict">
+    <meta name="cookie-maxage" content="3600">
+
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- VULN-011 fix: Async font loading with fallback -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
     <style>
         :root {
             --primary-color: #1a56db;
@@ -625,12 +647,27 @@
     </div>
 
     <script>
+        // ═══════════════════════════════════════════════════════════
+        // SECURE LOGGER (VULN-008 fix)
+        // ═══════════════════════════════════════════════════════════
+        const LOG_LEVEL = document.querySelector('meta[name="app-logging"]')?.content || 'production';
+        const isDev = LOG_LEVEL === 'development' || (location.hostname === 'localhost' && LOG_LEVEL !== 'production');
+
+        const secureLog = {
+            debug: (...args) => isDev && console.debug('[GovLLM]', ...args),
+            info: (...args) => isDev && console.info('[GovLLM]', ...args),
+            warn: (...args) => isDev && console.warn('[GovLLM]', ...args),
+            error: (...args) => console.error('[GovLLM]', ...args), // Always log errors
+            security: (...args) => {
+                // Security events always logged, but sanitized
+                const sanitized = args.map(a => typeof a === 'string' ? a.replace(/[\w-]+@[\w.-]+/g, '***@***.***') : a);
+                console.warn('[GovLLM:SECURITY]', ...sanitized);
+            }
+        };
+
         // Dashboard initialization
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🛡️ GovLLM-Sentinel Dashboard loaded');
-            
-            // In a real implementation, this would fetch data from API
-            // fetchDashboardData();
+            secureLog.info('Dashboard loaded');
         });
 
         // Placeholder for API integration
@@ -639,9 +676,9 @@
                 // const response = await fetch('/api/v1/dashboard');
                 // const data = await response.json();
                 // updateDashboard(data);
-                console.log('API integration ready');
+                secureLog.debug('API integration ready');
             } catch (error) {
-                console.error('Error fetching data:', error);
+                secureLog.error('Error fetching data:', error.message);
             }
         }
 

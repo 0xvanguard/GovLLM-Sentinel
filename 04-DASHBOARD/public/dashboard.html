@@ -4,8 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GovLLM-Sentinel — Dashboard de Seguridad LLM</title>
+
+    <!-- Security Headers (VULN-004, VULN-005, VULN-013, VULN-014 fix) -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:8000; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none';">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
+    <meta http-equiv="Strict-Transport-Security" content="max-age=31536000; includeSubDomains">
+    <meta name="robots" content="noindex, nofollow">
+    <meta http-equiv="X-API-Version" content="2.0">
+    <!-- API Configuration (VULN-003 fix) -->
+    <meta name="api-base" content="/api">
+    <meta name="api-timeout" content="10000">
+    <meta name="api-demo-mode" content="auto">
+    <!-- Logging Configuration (VULN-008 fix) -->
+    <meta name="app-logging" content="production">
+    <!-- Security: VULN-012 fix - Hide version -->
+    <meta name="app-version" content="hidden">
+    <!-- VULN-010 fix: Cookie Security Configuration -->
+    <meta name="cookie-secure" content="true">
+    <meta name="cookie-samesite" content="strict">
+    <meta name="cookie-maxage" content="3600">
+    <meta name="cookie-domain" content="">
+
+    <!-- VULN-011 fix: Fonts with fallback (Google Fonts no soporta SRI) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
     <style>
         :root {
             --bg: #0a0e17;
@@ -780,7 +807,7 @@
             <div class="header-right">
                 <div class="status-dot"></div>
                 <span class="status-text" id="apiStatus">Conectando...</span>
-                <span class="header-badge">v2.0</span>
+                <span class="header-badge" id="versionBadge"></span>
             </div>
         </header>
 
@@ -788,13 +815,17 @@
         <section class="scan-section">
             <h2>Escanear Texto</h2>
             <div class="input-group">
-                <input type="text" class="scan-input" id="scanInput" 
-                       placeholder="Escribe o pega texto para escanear (PII, secretos, sesgo...)" 
-                       autocomplete="off">
+                <div style="flex: 1; position: relative;">
+                    <input type="text" class="scan-input" id="scanInput" 
+                           placeholder="Escribe o pega texto para escanear (PII, secretos, sesgo...)" 
+                           autocomplete="off" maxlength="10000">
+                    <span id="charCount" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); pointer-events: none;">0/10000</span>
+                </div>
                 <button class="scan-btn" id="scanBtn" onclick="runScan()">
                     ⚡ Escanear
                 </button>
             </div>
+            <div id="inputError" style="display: none; padding: 8px 12px; margin-bottom: 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; color: var(--critical); font-size: 0.85rem; font-family: 'JetBrains Mono', monospace;"></div>
             <div class="quick-samples">
                 <button class="sample-btn" onclick="loadSample('pii')">🏷 CURP</button>
                 <button class="sample-btn" onclick="loadSample('rfc')">📋 RFC</button>
@@ -901,10 +932,197 @@
 
     <script>
         // ═══════════════════════════════════════════════════════════
-        // CONFIGURATION
+        // SECURE LOGGER (VULN-008 fix)
+        // ═══════════════════════════════════════════════════════════
+        const LOG_LEVEL = document.querySelector('meta[name="app-logging"]')?.content || 'production';
+        const isDev = LOG_LEVEL === 'development' || (location.hostname === 'localhost' && LOG_LEVEL !== 'production');
+
+        const secureLog = {
+            debug: (...args) => isDev && console.debug('[GovLLM]', ...args),
+            info: (...args) => isDev && console.info('[GovLLM]', ...args),
+            warn: (...args) => isDev && console.warn('[GovLLM]', ...args),
+            error: (...args) => console.error('[GovLLM]', ...args),
+            security: (...args) => {
+                const sanitized = args.map(a => typeof a === 'string' ? a.replace(/[\w-]+@[\w.-]+/g, '***@***.***') : a);
+                console.warn('[GovLLM:SECURITY]', ...sanitized);
+            }
+        };
+
+        // ═══════════════════════════════════════════════════════════
+        // SECURE COOKIE MANAGER (VULN-010 fix)
         // ═══════════════════════════════════════════════════════════
 
-        const API_BASE = 'http://localhost:8000';
+        const CookieManager = (() => {
+            // Read configuration from meta tags
+            const config = {
+                secure: document.querySelector('meta[name="cookie-secure"]')?.content !== 'false',
+                sameSite: document.querySelector('meta[name="cookie-samesite"]')?.content || 'strict',
+                maxAge: parseInt(document.querySelector('meta[name="cookie-maxage"]')?.content || '3600', 10),
+                domain: document.querySelector('meta[name="cookie-domain"]')?.content || '',
+                path: '/'
+            };
+
+            // Security: Force secure on HTTPS
+            if (location.protocol === 'https:') {
+                config.secure = true;
+            }
+
+            // Validate SameSite value
+            const validSameSite = ['strict', 'lax', 'none'];
+            if (!validSameSite.includes(config.sameSite.toLowerCase())) {
+                config.sameSite = 'strict';
+            }
+
+            // Sanitize cookie name (alphanumeric, dash, underscore only)
+            function sanitizeName(name) {
+                return name.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 64);
+            }
+
+            // Sanitize cookie value (remove dangerous characters)
+            function sanitizeValue(value) {
+                if (typeof value !== 'string') value = String(value);
+                // Remove null bytes, semicolons, commas
+                return value.replace(/[;,%]/g, '').substring(0, 4096);
+            }
+
+            // Build cookie string
+            function buildCookieString(name, value, options = {}) {
+                const safeName = sanitizeName(name);
+                const safeValue = sanitizeValue(value);
+                
+                if (!safeName) {
+                    secureLog.error('Invalid cookie name:', name);
+                    return null;
+                }
+
+                let cookie = `${safeName}=${safeValue}`;
+
+                // Max-Age (takes precedence over Expires)
+                const maxAge = options.maxAge ?? config.maxAge;
+                if (maxAge > 0) {
+                    cookie += `; Max-Age=${maxAge}`;
+                }
+
+                // Path
+                cookie += `; Path=${options.path || config.path}`;
+
+                // Domain (if specified)
+                const domain = options.domain ?? config.domain;
+                if (domain) {
+                    cookie += `; Domain=${domain}`;
+                }
+
+                // Secure flag
+                const secure = options.secure ?? config.secure;
+                if (secure) {
+                    cookie += '; Secure';
+                }
+
+                // HttpOnly (cannot be set via JS, but documented for server-side)
+                // Note: HttpOnly must be set by the server, not client-side JS
+                // This is documented here for server implementation reference
+                
+                // SameSite
+                const sameSite = options.sameSite || config.sameSite;
+                cookie += `; SameSite=${sameSite.charAt(0).toUpperCase() + sameSite.slice(1)}`;
+
+                return cookie;
+            }
+
+            return {
+                // Set a cookie (with security validation)
+                set(name, value, options = {}) {
+                    const cookieStr = buildCookieString(name, value, options);
+                    if (cookieStr) {
+                        document.cookie = cookieStr;
+                        secureLog.debug(`Cookie set: ${sanitizeName(name)}`);
+                        return true;
+                    }
+                    return false;
+                },
+
+                // Get a cookie value by name
+                get(name) {
+                    const safeName = sanitizeName(name);
+                    const match = document.cookie.match(new RegExp(`(^| )${safeName}=([^;]+)`));
+                    return match ? decodeURIComponent(match[2]) : null;
+                },
+
+                // Delete a cookie
+                delete(name, options = {}) {
+                    return this.set(name, '', { ...options, maxAge: 0 });
+                },
+
+                // Check if cookies are enabled
+                isEnabled() {
+                    try {
+                        document.cookie = '__test=1; SameSite=Strict';
+                        const enabled = document.cookie.includes('__test=1');
+                        document.cookie = '__test=; Max-Age=0';
+                        return enabled;
+                    } catch {
+                        return false;
+                    }
+                },
+
+                // Get all cookies as object (for debugging only)
+                getAll() {
+                    if (!isDev) {
+                        secureLog.warn('getAll() should only be used in development');
+                        return {};
+                    }
+                    const cookies = {};
+                    document.cookie.split(';').forEach(c => {
+                        const [name, ...value] = c.split('=');
+                        if (name) cookies[name.trim()] = value.join('=').trim();
+                    });
+                    return cookies;
+                },
+
+                // Get current configuration (sanitized)
+                getConfig() {
+                    return {
+                        secure: config.secure,
+                        sameSite: config.sameSite,
+                        maxAge: config.maxAge,
+                        domain: config.domain || '(current domain)'
+                    };
+                }
+            };
+        })();
+
+        // Log cookie configuration on init
+        secureLog.debug('Cookie config:', CookieManager.getConfig());
+
+        // ═══════════════════════════════════════════════════════════
+        // CONFIGURATION (VULN-003 fix)
+        // ═══════════════════════════════════════════════════════════
+
+        // Read API configuration from meta tags (secure, no hardcoded URLs)
+        const API_BASE = (() => {
+            const metaApiBase = document.querySelector('meta[name="api-base"]');
+            const configured = metaApiBase?.content;
+
+            // Security: validate URL format
+            if (configured && /^https?:\/\//.test(configured)) {
+                // Absolute URL - use as-is (must be HTTPS in production)
+                if (location.protocol === 'https:' && configured.startsWith('http:')) {
+                    secureLog.security('Upgrading API URL to HTTPS');
+                    return configured.replace('http:', 'https:');
+                }
+                return configured;
+            } else if (configured && configured.startsWith('/')) {
+                // Relative URL - combine with current origin
+                return `${location.origin}${configured}`;
+            }
+
+            // Fallback: same origin (recommended for production)
+            return location.origin;
+        })();
+
+        const API_TIMEOUT = parseInt(document.querySelector('meta[name="api-timeout"]')?.content || '10000', 10);
+        const DEMO_MODE = document.querySelector('meta[name="api-demo-mode"]')?.content || 'auto';
+
         let scanHistory = [];
 
         // ═══════════════════════════════════════════════════════════
@@ -923,28 +1141,187 @@
         };
 
         // ═══════════════════════════════════════════════════════════
+        // INPUT VALIDATION (VULN-007 fix)
+        // ═══════════════════════════════════════════════════════════
+
+        const VALIDATION_CONFIG = {
+            maxLength: 10000,
+            minLength: 1,
+            scanCooldown: 1500,  // 1.5 seconds between scans
+            maxScansPerMinute: 20,
+            forbiddenPatterns: [
+                /\x00/,           // Null bytes
+                /\x01-\x08/,      // Control characters (except tab, newline)
+                /\x0B\x0C/,       // Vertical tab, form feed
+                /\x0E-\x1F/       // More control characters
+            ]
+        };
+
+        let lastScanTimestamp = 0;
+        let scanCountThisMinute = 0;
+        let scanCountResetTimer = null;
+
+        function validateInput(text) {
+            const errors = [];
+
+            // Check minimum length
+            if (!text || text.length < VALIDATION_CONFIG.minLength) {
+                errors.push('El texto no puede estar vacío');
+                return { valid: false, errors, sanitized: '' };
+            }
+
+            // Check maximum length
+            if (text.length > VALIDATION_CONFIG.maxLength) {
+                errors.push(`El texto excede el límite de ${VALIDATION_CONFIG.maxLength} caracteres (actual: ${text.length})`);
+            }
+
+            // Check for forbidden control characters
+            for (const pattern of VALIDATION_CONFIG.forbiddenPatterns) {
+                if (pattern.test(text)) {
+                    errors.push('El texto contiene caracteres no permitidos');
+                    break;
+                }
+            }
+
+            // Sanitize: remove null bytes and dangerous control chars
+            let sanitized = text
+                .replace(/\x00/g, '')           // Remove null bytes
+                .replace(/[\x01-\x08\x0B\x0C\x0E-\x1F]/g, ''); // Remove control chars
+
+            return {
+                valid: errors.length === 0,
+                errors,
+                sanitized,
+                originalLength: text.length,
+                sanitizedLength: sanitized.length
+            };
+        }
+
+        function checkRateLimit() {
+            const now = Date.now();
+
+            // Check cooldown between scans
+            if (now - lastScanTimestamp < VALIDATION_CONFIG.scanCooldown) {
+                const waitSeconds = Math.ceil((VALIDATION_CONFIG.scanCooldown - (now - lastScanTimestamp)) / 1000);
+                return {
+                    allowed: false,
+                    error: `Espera ${waitSeconds} segundo(s) entre escaneos`
+                };
+            }
+
+            // Check scans per minute limit
+            if (scanCountThisMinute >= VALIDATION_CONFIG.maxScansPerMinute) {
+                return {
+                    allowed: false,
+                    error: `Límite de ${VALIDATION_CONFIG.maxScansPerMinute} escaneos por minuto alcanzado`
+                };
+            }
+
+            return { allowed: true };
+        }
+
+        function recordScan() {
+            lastScanTimestamp = Date.now();
+            scanCountThisMinute++;
+
+            // Reset counter after 1 minute
+            if (!scanCountResetTimer) {
+                scanCountResetTimer = setTimeout(() => {
+                    scanCountThisMinute = 0;
+                    scanCountResetTimer = null;
+                }, 60000);
+            }
+        }
+
+        function showInputError(message) {
+            const input = document.getElementById('scanInput');
+            const errorEl = document.getElementById('inputError');
+
+            if (errorEl) {
+                errorEl.textContent = message;
+                errorEl.style.display = 'block';
+            }
+
+            input.style.borderColor = 'var(--critical)';
+            input.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.3)';
+
+            // Clear error after 5 seconds
+            setTimeout(() => {
+                if (errorEl) errorEl.style.display = 'none';
+                input.style.borderColor = '';
+                input.style.boxShadow = '';
+            }, 5000);
+        }
+
+        function updateCharCount() {
+            const input = document.getElementById('scanInput');
+            const counter = document.getElementById('charCount');
+            if (counter) {
+                const len = input.value.length;
+                const max = VALIDATION_CONFIG.maxLength;
+                counter.textContent = `${len}/${max}`;
+
+                if (len > max * 0.9) {
+                    counter.style.color = 'var(--critical)';
+                } else if (len > max * 0.7) {
+                    counter.style.color = 'var(--high)';
+                } else {
+                    counter.style.color = 'var(--text-dim)';
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
         // CORE FUNCTIONS
         // ═══════════════════════════════════════════════════════════
 
         function loadSample(key) {
             document.getElementById('scanInput').value = samples[key];
             document.getElementById('scanInput').focus();
+            updateCharCount();
         }
 
         async function runScan() {
-            const text = document.getElementById('scanInput').value.trim();
-            if (!text) return;
+            const rawText = document.getElementById('scanInput').value.trim();
 
+            // Validate input
+            const validation = validateInput(rawText);
+            if (!validation.valid) {
+                showInputError(validation.errors[0]);
+                return;
+            }
+
+            // Check rate limit
+            const rateCheck = checkRateLimit();
+            if (!rateCheck.allowed) {
+                showInputError(rateCheck.error);
+                return;
+            }
+
+            const text = validation.sanitized;
             const btn = document.getElementById('scanBtn');
             btn.disabled = true;
             btn.textContent = '⏳ Escaneando...';
 
+            // Record scan for rate limiting
+            recordScan();
+
             try {
+                // VULN-003 fix: Use configured API_BASE with timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+
                 const response = await fetch(`${API_BASE}/api/v1/scan/full`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text })
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ text }),
+                    signal: controller.signal
                 });
+
+                clearTimeout(timeoutId);
 
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
@@ -953,7 +1330,13 @@
                 addToTimeline(data, text);
 
             } catch (err) {
+                // Demo mode handling
+                if (DEMO_MODE === 'off') {
+                    showInputError('Error de conexión con la API');
+                    return;
+                }
                 // Demo mode — generate mock results
+                secureLog.debug('API unavailable, using demo mode');
                 const data = generateMockResults(text);
                 displayResults(data);
                 addToTimeline(data, text);
@@ -1110,11 +1493,11 @@
 
             container.innerHTML = violations.map((v, i) => `
                 <div class="violation-item animate-in" style="animation-delay: ${i * 0.05}s">
-                    <div class="severity-dot severity-${v.severity}"></div>
+                    <div class="severity-dot severity-${escapeAttr(v.severity)}"></div>
                     <div class="violation-info">
-                        <div class="violation-type">${v.type}</div>
-                        <div class="violation-desc">${v.desc}</div>
-                        <div class="violation-meta">${v.category} • ${v.severity}</div>
+                        <div class="violation-type">${escapeHtml(v.type)}</div>
+                        <div class="violation-desc">${escapeHtml(v.desc)}</div>
+                        <div class="violation-meta">${escapeHtml(v.category)} • ${escapeHtml(v.severity)}</div>
                     </div>
                     <div class="violation-confidence">${(v.conf * 100).toFixed(0)}%</div>
                 </div>
@@ -1189,16 +1572,30 @@
                 return;
             }
 
-            container.innerHTML = scanHistory.map(item => {
+            container.innerHTML = scanHistory.map((item, index) => {
                 const action = item.data.overall_action || 'allow';
+                const safeTime = escapeHtml(item.time);
+                const safeAction = escapeHtml(action.toUpperCase());
+                const safeText = escapeHtml(item.text);
+                const safeViolations = escapeHtml(String(item.totalViolations));
                 return `
-                    <div class="timeline-item" onclick="loadFromHistory('${item.text.replace(/'/g, "\\'")}')">
-                        <span class="timeline-time">${item.time}</span>
-                        <span class="timeline-action badge-${action === 'allow' ? 'allow' : action === 'block' ? 'block' : 'mask'}">${action.toUpperCase()}</span>
-                        <span class="timeline-text">${escapeHtml(item.text)}</span>
-                        <span class="timeline-violations">${item.totalViolations} violaciones</span>
+                    <div class="timeline-item" data-history-index="${index}">
+                        <span class="timeline-time">${safeTime}</span>
+                        <span class="timeline-action badge-${action === 'allow' ? 'allow' : action === 'block' ? 'block' : 'mask'}">${safeAction}</span>
+                        <span class="timeline-text">${safeText}</span>
+                        <span class="timeline-violations">${safeViolations} violaciones</span>
                     </div>`;
             }).join('');
+
+            // Attach event listeners safely (VULN-001 fix)
+            container.querySelectorAll('.timeline-item[data-history-index]').forEach(el => {
+                el.addEventListener('click', () => {
+                    const idx = parseInt(el.dataset.historyIndex, 10);
+                    if (scanHistory[idx]) {
+                        loadFromHistory(scanHistory[idx].text);
+                    }
+                });
+            });
         }
 
         function loadFromHistory(text) {
@@ -1212,9 +1609,20 @@
         }
 
         function escapeHtml(text) {
+            if (text == null) return '';
             const div = document.createElement('div');
-            div.textContent = text;
+            div.textContent = String(text);
             return div.innerHTML;
+        }
+
+        function escapeAttr(text) {
+            if (text == null) return '';
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
         }
 
         // ═══════════════════════════════════════════════════════════
@@ -1223,24 +1631,60 @@
 
         async function checkApiStatus() {
             try {
-                const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(2000) });
+                const res = await fetch(`${API_BASE}/health`, {
+                    signal: AbortSignal.timeout(Math.min(API_TIMEOUT, 3000)) // Health check uses shorter timeout
+                });
                 if (res.ok) {
                     document.getElementById('apiStatus').textContent = 'API Online';
                     document.getElementById('apiStatus').style.color = 'var(--allow)';
+                    document.getElementById('apiStatus').title = `Connected to: ${API_BASE}`;
                     return;
                 }
             } catch {}
-            document.getElementById('apiStatus').textContent = 'Demo Mode';
-            document.getElementById('apiStatus').style.color = 'var(--high)';
+            document.getElementById('apiStatus').textContent = DEMO_MODE === 'off' ? 'API Offline' : 'Demo Mode';
+            document.getElementById('apiStatus').style.color = DEMO_MODE === 'off' ? 'var(--critical)' : 'var(--high)';
         }
 
         // ═══════════════════════════════════════════════════════════
-        // KEYBOARD SHORTCUT
+        // KEYBOARD SHORTCUT & INPUT EVENTS
         // ═══════════════════════════════════════════════════════════
 
-        document.getElementById('scanInput').addEventListener('keydown', (e) => {
+        const scanInputEl = document.getElementById('scanInput');
+
+        scanInputEl.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') runScan();
         });
+
+        // Update character count on input
+        scanInputEl.addEventListener('input', updateCharCount);
+
+        // Initialize character count
+        updateCharCount();
+
+        // ═══════════════════════════════════════════════════════════
+        // VERSION DISPLAY (VULN-012 fix)
+        // ═══════════════════════════════════════════════════════════
+
+        const versionMeta = document.querySelector('meta[name="app-version"]');
+        const versionBadge = document.getElementById('versionBadge');
+        if (versionBadge) {
+            if (versionMeta?.content === 'hidden' || isDev === false) {
+                // Production: don't show version
+                versionBadge.style.display = 'none';
+            } else {
+                // Development: show version
+                versionBadge.textContent = versionMeta?.content || 'dev';
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // MOCK MODE SECURITY (VULN-006 fix)
+        // ═══════════════════════════════════════════════════════════
+
+        // Log mock mode status for security auditing
+        if (DEMO_MODE === 'on') {
+            secureLog.security('Demo mode explicitly enabled - ensure not used in production');
+        }
 
         // ═══════════════════════════════════════════════════════════
         // INIT
