@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía HarmBench — GovLLM-Sentinel</title>
+
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none';">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="robots" content="noindex, nofollow">
+
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"></noscript>
+
+    <style>
+        .container { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+        .top-nav {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 20px; background: var(--bg-card); border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md); margin-bottom: 24px;
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            animation: fadeInUp 0.4s ease-out;
+        }
+        .top-nav a { color: var(--primary-light); text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: color var(--transition-fast); }
+        .top-nav a:hover { color: var(--text-primary); }
+        .top-nav .nav-links { display: flex; gap: 20px; }
+
+        /* Hero */
+        .hero {
+            position: relative; background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.08));
+            border: 1px solid rgba(99, 102, 241, 0.15); border-radius: var(--radius-xl);
+            padding: 48px 40px; margin-bottom: 32px; overflow: hidden;
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            animation: fadeInUp 0.6s ease-out;
+        }
+        .hero::before { content: ''; position: absolute; top: -50%; right: -15%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(99, 102, 241, 0.06), transparent 70%); pointer-events: none; }
+        .hero::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3), transparent); }
+        .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); color: #a5b4fc; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 16px; letter-spacing: 0.04em; text-transform: uppercase; }
+        .hero h1 { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em; background: linear-gradient(135deg, var(--text-primary), #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 12px; }
+        .hero p { color: var(--text-secondary); font-size: 1.05rem; max-width: 750px; line-height: 1.7; }
+        .hero-stats { display: flex; gap: 32px; margin-top: 28px; flex-wrap: wrap; }
+        .hero-stat { text-align: center; }
+        .hero-stat-value { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; }
+        .hero-stat-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+
+        /* Section */
+        .section {
+            background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: var(--radius-lg);
+            padding: 32px; margin-bottom: 24px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            position: relative; overflow: hidden; animation: fadeInUp 0.6s ease-out both;
+        }
+        .section::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent); }
+        .section:nth-child(2) { animation-delay: 0.1s; }
+        .section:nth-child(3) { animation-delay: 0.15s; }
+        .section:nth-child(4) { animation-delay: 0.2s; }
+        .section:nth-child(5) { animation-delay: 0.25s; }
+        .section:nth-child(6) { animation-delay: 0.3s; }
+        .section:nth-child(7) { animation-delay: 0.35s; }
+        .section:nth-child(8) { animation-delay: 0.4s; }
+
+        .section-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 24px; color: var(--text-primary); display: flex; align-items: center; gap: 12px; letter-spacing: -0.01em; }
+        .section-title .icon { width: 40px; height: 40px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0; }
+        .icon-indigo { background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); color: #a5b4fc; }
+        .icon-red { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger-light); }
+        .icon-blue { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); color: var(--primary-light); }
+        .icon-green { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: var(--success-light); }
+        .icon-purple { background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.2); color: #c084fc; }
+        .icon-yellow { background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); color: var(--warning-light); }
+
+        /* Stat Grid */
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: var(--radius-md); padding: 20px; text-align: center;
+            transition: all var(--transition-normal); position: relative; overflow: hidden;
+        }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.04), transparent); }
+        .stat-card:hover { background: rgba(255, 255, 255, 0.04); border-color: var(--border-accent); transform: translateY(-2px); }
+        .stat-card-value { font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: 6px; letter-spacing: -0.02em; }
+        .stat-card-label { font-size: 0.82rem; color: var(--text-muted); font-weight: 500; }
+
+        /* Category Grid */
+        .category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+        .category-card {
+            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: var(--radius-md); padding: 18px; transition: all var(--transition-normal);
+        }
+        .category-card:hover { background: rgba(255, 255, 255, 0.04); border-color: var(--border-accent); }
+        .category-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .category-card-icon { font-size: 1.2rem; }
+        .category-card-name { font-weight: 600; font-size: 0.92rem; color: var(--text-primary); }
+        .category-card-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; }
+        .category-card-count { font-family: var(--font-mono); font-size: 0.75rem; color: #a5b4fc; margin-top: 8px; font-weight: 600; }
+
+        /* Attack Table */
+        .attack-table { width: 100%; border-collapse: collapse; }
+        .attack-table th, .attack-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+        .attack-table th { background: rgba(255, 255, 255, 0.02); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+        .attack-table td { font-size: 0.88rem; color: var(--text-secondary); transition: all var(--transition-fast); }
+        .attack-table tr:hover td { background: rgba(255, 255, 255, 0.02); color: var(--text-primary); }
+
+        .tag { padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em; display: inline-block; }
+        .tag-white { background: rgba(255, 255, 255, 0.06); color: var(--text-secondary); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .tag-black { background: rgba(100, 116, 139, 0.15); color: var(--text-secondary); border: 1px solid rgba(100, 116, 139, 0.2); }
+        .tag-transfer { background: rgba(168, 85, 247, 0.1); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.15); }
+        .tag-human { background: rgba(245, 158, 11, 0.1); color: var(--warning-light); border: 1px solid rgba(245, 158, 11, 0.15); }
+        .tag-multi { background: rgba(59, 130, 246, 0.1); color: var(--primary-light); border: 1px solid rgba(59, 130, 246, 0.15); }
+        .tag-vision { background: rgba(16, 185, 129, 0.1); color: var(--success-light); border: 1px solid rgba(16, 185, 129, 0.15); }
+
+        /* Pipeline Steps */
+        .pipeline { display: flex; flex-direction: column; gap: 16px; }
+        .pipeline-step {
+            display: flex; gap: 16px; padding: 20px;
+            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: var(--radius-md); transition: all var(--transition-normal);
+        }
+        .pipeline-step:hover { background: rgba(255, 255, 255, 0.04); border-color: var(--border-accent); }
+        .pipeline-step-num {
+            width: 36px; height: 36px; border-radius: var(--radius-sm); display: flex;
+            align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;
+            flex-shrink: 0; background: rgba(99, 102, 241, 0.12); color: #a5b4fc;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+        .pipeline-step-content { flex: 1; }
+        .pipeline-step-title { font-weight: 600; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 4px; }
+        .pipeline-step-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; }
+
+        /* Code Block */
+        .code-block {
+            background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: var(--radius-md); padding: 18px; margin: 12px 0; overflow-x: auto; position: relative;
+        }
+        .code-block code { font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-secondary); line-height: 1.7; white-space: pre; }
+        .code-block .label { position: absolute; top: 8px; right: 10px; font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+        .code-block .keyword { color: #569cd6; }
+        .code-block .string { color: #ce9178; }
+        .code-block .comment { color: #6a9955; }
+        .code-block .function { color: #dcdcaa; }
+
+        /* Key Findings */
+        .findings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+        .finding-card {
+            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: var(--radius-md); padding: 20px; transition: all var(--transition-normal);
+            border-left: 3px solid rgba(99, 102, 241, 0.3);
+        }
+        .finding-card:hover { background: rgba(255, 255, 255, 0.04); }
+        .finding-card-title { font-weight: 600; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 8px; }
+        .finding-card-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; }
+
+        /* R2D2 Section */
+        .r2d2-algo {
+            background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(168, 85, 247, 0.15);
+            border-radius: var(--radius-md); padding: 24px; margin: 16px 0;
+        }
+        .r2d2-title { font-family: var(--font-mono); font-size: 0.85rem; color: #c084fc; font-weight: 600; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+        .r2d2-line { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary); line-height: 1.8; padding-left: 16px; }
+        .r2d2-line .kw { color: #569cd6; }
+        .r2d2-line .fn { color: #dcdcaa; }
+        .r2d2-line .str { color: #ce9178; }
+        .r2d2-line .cmt { color: #6a9955; }
+
+        /* Result Bar */
+        .result-bar { margin: 10px 0; }
+        .result-bar-label { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .result-bar-name { font-size: 0.85rem; color: var(--text-secondary); }
+        .result-bar-value { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-primary); font-weight: 600; }
+        .result-bar-track { height: 8px; background: rgba(255, 255, 255, 0.06); border-radius: 4px; overflow: hidden; }
+        .result-bar-fill { height: 100%; border-radius: 4px; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* Footer */
+        .footer { text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid rgba(255, 255, 255, 0.04); margin-top: 16px; }
+        .footer strong { color: var(--text-secondary); }
+        .footer a { color: var(--primary-light); text-decoration: none; transition: color var(--transition-fast); }
+        .footer a:hover { color: var(--text-primary); text-decoration: underline; }
+
+        @media (max-width: 768px) {
+            .container { padding: 14px; }
+            .hero { padding: 28px 20px; }
+            .hero h1 { font-size: 1.6rem; }
+            .hero-stats { gap: 20px; }
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
+            .category-grid { grid-template-columns: 1fr; }
+            .findings-grid { grid-template-columns: 1fr; }
+            .attack-table { font-size: 0.82rem; }
+            .attack-table th, .attack-table td { padding: 8px 10px; }
+            .top-nav { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="top-nav">
+            <a href="index.html">← Dashboard</a>
+            <div class="nav-links">
+                <a href="jailbreak-learning.html">🔓 Aprendizaje</a>
+                <a href="executive-summary.html">📊 Resumen</a>
+            </div>
+        </nav>
+
+        <!-- Hero -->
+        <section class="hero">
+            <div class="hero-badge">📚 Framework de Referencia</div>
+            <h1>🔬 Guía Completa: HarmBench</h1>
+            <p>Framework estandarizado de evaluación para red teaming automatizado y refuse robusto. Basado en <em>Mazeika et al. 2024</em> — 18 métodos de ataque, 33 LLMs evaluados, 510 comportamientos有害. La referencia que GovLLM-Sentinel utiliza para su batería de evaluación.</p>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="hero-stat-value" style="color: #a5b4fc;">510</div>
+                    <div class="hero-stat-label">Comportamientos</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value" style="color: var(--danger-light);">18</div>
+                    <div class="hero-stat-label">Métodos de Ataque</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value" style="color: var(--success-light);">33</div>
+                    <div class="hero-stat-label">LLMs Evaluados</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value" style="color: var(--warning-light);">4</div>
+                    <div class="hero-stat-label">Categorías Funcionales</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value" style="color: #c084fc;">7</div>
+                    <div class="hero-stat-label">Categorías Semánticas</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Framework Overview -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="icon icon-indigo">🏗️</span>
+                Visión General del Framework
+            </h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px; line-height: 1.7;">
+                HarmBench establece tres propiedades clave para evaluaciones de red teaming: <strong>amplitud</strong> (broad behaviors), <strong>comparabilidad</strong> (parámetros estandarizados), y <strong>métricas robustas</strong> (classificadores resistentes al gaming). A diferencia de evaluations previas que usaban menos de 100 behaviors, HarmBench contiene <strong>510 comportamientos únicos</strong> diseñados para violar leyes o normas.
+            </p>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-card-value" style="color: #a5b4fc;">510</div>
+                    <div class="stat-card-label">Behaviors Totales</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" style="color: var(--text-primary);">400</div>
+                    <div class="stat-card-label">Textuales</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" style="color: var(--primary-light);">110</div>
+                    <div class="stat-card-label">Multimodales</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" style="color: var(--success-light);">100</div>
+                    <div class="stat-card-label">Validación</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" style="color: var(--warning-light);">410</div>
+                    <div class="stat-card-label">Test</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Semantic Categories -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="icon icon-red">🗂️</span>
+                7 Categorías Semánticas
+            </h2>
+            <div class="category-grid">
+                <div class="category-card">
+                    <div class="category-card-header">
+                        <span class="category-card-icon">💻</span>
+                        <span class="category-card-name">Cybercrime & Unauthorized Intrusion</span>
+                    </div>
+                    <div class="category-card-desc">Malware, hacking, explotación de vulnerabilidades, acceso no autorizado a sistemas</div>
+                    <div class="category-card-count">Categoría primaria de GovLLM-Sentinel</div>
+                </div>
+                <div class="category-card">
+                    <div class="category-card-header">
+                        <span class="category-card-icon">☣️</span>
+                        <span class="category-card-name">Chemical & Biological Weapons/Drugs</span>
+                    </div>
+                    <div class="category-card-desc">Síntesis de agentes químicos/biológicos, fabricación de drogas, armas de destrucción masiva</div>
+                </div>
+                <div class="category-card">
+                    <div class="category-card-header">
+                        <span class="category-card-icon">©️</span>
+                        <span class="category-card-name">Copyright Violations</span>
+                    </div>
+                    <div class="category-card-desc">Generación de contenido protegido por derechos de autor, reproducción de textos literarios</div>
+                </div>
+                <div class="category-card">
+                    <div class="category-card-header">
+                        <span class="category-card-icon">📰</span>
+                        <span class="category-card-name">Misinformation & Disinformation</span>
+                    </div>
+                    <div class="category-card-desc">Noticias falsas, propaganda, desinformación política, teorías conspirativas</div>
+                </div>
+                <div class="category-card">
+                    <div class="category-card-header">
+                        <span class="category-card-icon">🎯</span>
+                        <span class="category-card-name">Harassment & Bullying</span>
+                    </div>
+                    <div class="category-card-desc">Acoso, intimidación, discurso de odio, contenido amenazante</div>
+                </div>
+                <div class="category-card">
+                    <div class="category-card-header">
+                        <span class="category-card-icon">⚖️</span>
+                        <span class="category-card-name">Illegal Activities</span>
+                    </div>
+                    <div class="category-card-desc">Actividades ilegales generales, evasión fiscal, fraude, soborno</div>
+                </div>
+                <div class="category-card">
+                    <div class="category-card-header">
+                        <span class="category-card-icon">⚠️</span>
+                        <span class="category-card-name">General Harm</span>
+                    </div>
+                    <div class="category-card-desc">Contenido dañino general que no encaja en otras categorías pero viola normas</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Functional Categories -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="icon icon-purple">🧩</span>
+                4 Categorías Funcionales
+            </h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px; line-height: 1.7;">
+                Las categorías funcionales describen propiedades únicas de los behaviors que permiten medir diferentes aspectos de la robustez de un LLM.
+            </p>
+            <div class="category-grid">
+                <div class="category-card" style="border-left: 3px solid rgba(255, 255, 255, 0.1);">
+                    <div class="category-card-header">
+                        <span class="category-card-icon">📝</span>
+                        <span class="category-card-name">Standard Behaviors</span>
+                    </div>
+                    <div class="category-card-desc">Basados en datasets existentes (AdvBench, TDC 2023). Strings de behavior auto-contenidos sin contexto adicional.</div>
+                    <div class="category-card-count">200 behaviors</div>
+                </div>
+                <div class="category-card" style="border-left: 3px solid rgba(245, 158, 11, 0.3);">
+                    <div class="category-card-header">
+                        <span class="category-card-icon">📚</span>
+                        <span class="category-card-name">Copyright Behaviors</span>
+                    </div>
+                    <div class="category-card-desc">Piden al modelo generar contenido protegido. Clasificador basado en hashing para detectar reproducción literal.</div>
+                    <div class="category-card-count">100 behaviors</div>
+                </div>
+                <div class="category-card" style="border-left: 3px solid rgba(99, 102, 241, 0.3);">
+                    <div class="category-card-header">
+                        <span class="category-card-icon">🔗</span>
+                        <span class="category-card-name">Contextual Behaviors</span>
+                    </div>
+                    <div class="category-card-desc">Incluyen un string de contexto + behavior. Evaluaciones más realistas y diferencialmente dañinas. <strong>0% searchability</strong> vs 50% en datasets previos.</div>
+                    <div class="category-card-count">100 behaviors</div>
+                </div>
+                <div class="category-card" style="border-left: 3px solid rgba(16, 185, 129, 0.3);">
+                    <div class="category-card-header">
+                        <span class="category-card-icon">🖼️</span>
+                        <span class="category-card-name">Multimodal Behaviors</span>
+                    </div>
+                    <div class="category-card-desc">Incluyen imagen + behavior. Evalúan LLMs multimodales contra ataques que aprovechan inputs visuales.</div>
+                    <div class="category-card-count">110 behaviors</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 18 Attack Methods -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="icon icon-red">⚔️</span>
+                18 Métodos de Ataque
+            </h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px; line-height: 1.7;">
+                HarmBench evalúa 18 métodos de red teaming de 12 papers, categorizados por tipo de acceso y modalidad. Los métodos textuales incluyen white-box, black-box y transfer attacks.
+            </p>
+            <div style="overflow-x: auto;">
+                <table class="attack-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Método</th>
+                            <th>Tipo</th>
+                            <th>Categoría</th>
+                            <th>Descripción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td><strong>GCG</strong></td>
+                            <td><span class="tag tag-white">White-box</span></td>
+                            <td>Optimización</td>
+                            <td>Greedy Coordinate Gradient — optimiza sufijos adversariales usando gradientes. El más efectivo contra modelos robustos.</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td><strong>GCG (Multi)</strong></td>
+                            <td><span class="tag tag-multi">Multi-turn</span></td>
+                            <td>Optimización</td>
+                            <td>Variante multi-turn de GCG que distribuye el ataque across múltiples turnos de conversación.</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td><strong>GCG (Transfer)</strong></td>
+                            <td><span class="tag tag-transfer">Transfer</span></td>
+                            <td>Optimización</td>
+                            <td>Optimiza contra un modelo surrogate y transfiere el ataque al modelo target.</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td><strong>PEZ</strong></td>
+                            <td><span class="tag tag-white">White-box</span></td>
+                            <td>Optimización</td>
+                            <td>Projected Gradient Descent en espacio de embeddings para generar ataques en espacio continuo.</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td><strong>GBDA</strong></td>
+                            <td><span class="tag tag-white">White-box</span></td>
+                            <td>Optimización</td>
+                            <td>Gumbel-Softmax Black-box Differentiable Attack — optimización diferenciable con Gumbel-Softmax.</td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td><strong>UAT</strong></td>
+                            <td><span class="tag tag-white">White-box</span></td>
+                            <td>Optimización</td>
+                            <td>Universal Adversarial Triggers — triggers universales que funcionan across múltiples inputs.</td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td><strong>AutoPrompt</strong></td>
+                            <td><span class="tag tag-white">White-box</span></td>
+                            <td>Optimización</td>
+                            <td>Greedy search para encontrar tokens adversariales óptimos automáticamente.</td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td><strong>Stochastic Few-Shot</strong></td>
+                            <td><span class="tag tag-black">Black-box</span></td>
+                            <td>LLM Optimizer</td>
+                            <td>Genera ejemplos few-shot estocásticamente usando un LLM como optimizador.</td>
+                        </tr>
+                        <tr>
+                            <td>9</td>
+                            <td><strong>Zero-Shot</strong></td>
+                            <td><span class="tag tag-black">Black-box</span></td>
+                            <td>Template</td>
+                            <td>Usa templates predefinidos sin optimización. Baseline de jailbreaks manuales.</td>
+                        </tr>
+                        <tr>
+                            <td>10</td>
+                            <td><strong>PAIR</strong></td>
+                            <td><span class="tag tag-black">Black-box</span></td>
+                            <td>LLM Optimizer</td>
+                            <td>Prompt Automatic Iterative Refinement — un LLM genera y refina jailbreaks iterativamente. ~20 queries.</td>
+                        </tr>
+                        <tr>
+                            <td>11</td>
+                            <td><strong>TAP</strong></td>
+                            <td><span class="tag tag-black">Black-box</span></td>
+                            <td>LLM Optimizer</td>
+                            <td>Tree of Attacks with Pruning — búsqueda en árbol con poda para encontrar jailbreaks óptimos.</td>
+                        </tr>
+                        <tr>
+                            <td>12</td>
+                            <td><strong>TAP (Transfer)</strong></td>
+                            <td><span class="tag tag-transfer">Transfer</span></td>
+                            <td>LLM Optimizer</td>
+                            <td>TAP optimizado para transferibilidad entre modelos.</td>
+                        </tr>
+                        <tr>
+                            <td>13</td>
+                            <td><strong>AutoDAN</strong></td>
+                            <td><span class="tag tag-black">Black-box</span></td>
+                            <td>Genetic</td>
+                            <td>Algoritmo genético para generar jailbreaks que suenan naturales y evitan detección.</td>
+                        </tr>
+                        <tr>
+                            <td>14</td>
+                            <td><strong>PAP</strong></td>
+                            <td><span class="tag tag-black">Black-box</span></td>
+                            <td>LLM Optimizer</td>
+                            <td>Prefix Automatic Prompting — optimiza prefijos para maximizar la probabilidad de jailbreak.</td>
+                        </tr>
+                        <tr>
+                            <td>15</td>
+                            <td><strong>Human Jailbreaks</strong></td>
+                            <td><span class="tag tag-human">Humano</span></td>
+                            <td>Baseline</td>
+                            <td>Jailbreaks diseñados por humanos. Baseline que representa la creatividad humana.</td>
+                        </tr>
+                        <tr>
+                            <td>16</td>
+                            <td><strong>Direct Request</strong></td>
+                            <td><span class="tag tag-human">Baseline</span></td>
+                            <td>Baseline</td>
+                            <td>Peticiones directas sin optimización. Mide la tasa base de compliance del modelo.</td>
+                        </tr>
+                        <tr>
+                            <td>17</td>
+                            <td><strong>PGD</strong></td>
+                            <td><span class="tag tag-vision">Vision</span></td>
+                            <td>Multimodal</td>
+                            <td>Projected Gradient Descent para imágenes adversariales en LLMs multimodales.</td>
+                        </tr>
+                        <tr>
+                            <td>18</td>
+                            <td><strong>Adversarial Patch</strong></td>
+                            <td><span class="tag tag-vision">Vision</span></td>
+                            <td>Multimodal</td>
+                            <td>Parche visual adversarial que controla el comportamiento del modelo en runtime.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Evaluation Pipeline -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="icon icon-blue">🔄</span>
+                Pipeline de Evaluación
+            </h2>
+            <div class="pipeline">
+                <div class="pipeline-step">
+                    <div class="pipeline-step-num">01</div>
+                    <div class="pipeline-step-content">
+                        <div class="pipeline-step-title">Generación de Test Cases</div>
+                        <div class="pipeline-step-desc">El método de red teaming <code>g</code> recibe behaviors {y₁, y₂, ..., yₘ} y genera test cases {x₁, x₂, ..., xₙ} para cada behavior. Parámetro estandarizado: <strong>N=512 tokens</strong> para greedy decoding.</div>
+                    </div>
+                </div>
+                <div class="pipeline-step">
+                    <div class="pipeline-step-num">02</div>
+                    <div class="pipeline-step-content">
+                        <div class="pipeline-step-title">Generación de Completions</div>
+                        <div class="pipeline-step-desc">Los test cases se pasan al LLM target <code>f</code>, que genera T tokens con greedy decoding (determinístico) para producir outputs f<sub>T</sub>(x<sub>i</sub>) = x'<sub>i</sub>.</div>
+                    </div>
+                </div>
+                <div class="pipeline-step">
+                    <div class="pipeline-step-num">03</div>
+                    <div class="pipeline-step-content">
+                        <div class="pipeline-step-title">Evaluación con Clasificador</div>
+                        <div class="pipeline-step-desc">Las completions se evalúan usando un clasificador <code>c</code> fine-tuned (Llama 2 13B Chat) que determina si el modelo exhibió el comportamiento. ASR = (1/N) Σ c(f<sub>T</sub>(x<sub>i</sub>), y).</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="code-block" style="margin-top: 20px;">
+                <span class="label">Métrica ASR</span>
+<code><span class="comment">// Attack Success Rate — métrica principal</span>
+<span class="keyword">ASR</span>(y, g, f) = <span class="string">(1/N)</span> × Σ c(f<sub>T</sub>(x<sub>i</sub>), y)
+
+<span class="comment">// dnde:</span>
+<span class="comment">//   y = comportamiento objetivo</span>
+<span class="comment">//   g = método de red teaming</span>
+<span class="comment">//   f = modelo target</span>
+<span class="comment">//   c = clasificador (Llama 2 13B fine-tuned)</span>
+<span class="comment">//   N = 512 tokens (estandarizado)</span></code>
+            </div>
+        </section>
+
+        <!-- R2D2 Adversarial Training -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="icon icon-green">🛡️</span>
+                R2D2 — Adversarial Training para Robust Refusal
+            </h2>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; line-height: 1.7;">
+                <strong>Robust Refusal Dynamic Defense (R2D2)</strong> — método novel de adversarial training que fine-tunea LLMs usando un pool dinámico de test cases continuamente actualizados por GCG. Resulta en el SOTA de robustez contra GCG entre model-level defenses.
+            </p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                <div class="code-block">
+                    <span class="label">Loss Functions</span>
+<code><span class="comment">// Away Loss — opone al GCG loss</span>
+ℒ<sub>away</sub> = -1 × log(1 - f<sub>θ</sub>(t<sub>i</sub> | x<sub>i</sub>))
+
+<span class="comment">// Toward Loss — entrena refusal</span>
+ℒ<sub>toward</sub> = -1 × log(f<sub>θ</sub>(t<sub>refusal</sub> | x<sub>i</sub>))
+
+<span class="comment">// Combined Loss</span>
+ℒ<sub>total</sub> = ℒ<sub>away</sub> + ℒ<sub>toward</sub> + ℒ<sub>SFT</sub></code>
+                </div>
+                <div class="code-block">
+                    <span class="label">Hiperparámetros</span>
+<code><span class="comment">// Setup de entrenamiento (Mistral 7B)</span>
+M = <span class="string">500</span>     <span class="comment">// iteraciones</span>
+N = <span class="string">180</span>     <span class="comment">// test cases persistentes</span>
+m = <span class="string">5</span>       <span class="comment">// GCG steps por iteración</span>
+n = <span class="string">8</span>       <span class="comment">// test cases actualizados</span>
+K = <span class="string">20</span>%     <span class="comment">// reset de pool cada L=50</span>
+<span class="comment">// Tiempo: 16 horas en 8×A100</span></code>
+                </div>
+            </div>
+
+            <h3 style="color: var(--text-primary); font-size: 1.05rem; margin-bottom: 16px;">📊 Resultados de Robustez (ASR ↓)</h3>
+
+            <div class="result-bar">
+                <div class="result-bar-label">
+                    <span class="result-bar-name">Zephyr 7B (sin R2D2)</span>
+                    <span class="result-bar-value" style="color: var(--danger-light);">Alto</span>
+                </div>
+                <div class="result-bar-track">
+                    <div class="result-bar-fill" style="width: 85%; background: linear-gradient(90deg, var(--danger), var(--danger-light));"></div>
+                </div>
+            </div>
+            <div class="result-bar">
+                <div class="result-bar-label">
+                    <span class="result-bar-name">Llama 2 7B Chat</span>
+                    <span class="result-bar-value">31.8% ASR</span>
+                </div>
+                <div class="result-bar-track">
+                    <div class="result-bar-fill" style="width: 31.8%; background: linear-gradient(90deg, var(--warning), var(--warning-light));"></div>
+                </div>
+            </div>
+            <div class="result-bar">
+                <div class="result-bar-label">
+                    <span class="result-bar-name">Llama 2 13B Chat</span>
+                    <span class="result-bar-value">30.2% ASR</span>
+                </div>
+                <div class="result-bar-track">
+                    <div class="result-bar-fill" style="width: 30.2%; background: linear-gradient(90deg, var(--warning), var(--warning-light));"></div>
+                </div>
+            </div>
+            <div class="result-bar">
+                <div class="result-bar-label">
+                    <span class="result-bar-name"><strong>Zephyr 7B + R2D2</strong></span>
+                    <span class="result-bar-value" style="color: var(--success-light);">5.9% ASR ✦ SOTA</span>
+                </div>
+                <div class="result-bar-track">
+                    <div class="result-bar-fill" style="width: 5.9%; background: linear-gradient(90deg, var(--success), var(--success-light));"></div>
+                </div>
+            </div>
+
+            <div style="margin-top: 16px; padding: 14px; background: rgba(16, 185, 129, 0.04); border: 1px solid rgba(16, 185, 129, 0.1); border-radius: var(--radius-md);">
+                <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6;">
+                    <strong style="color: var(--success-light);">Resultado clave:</strong> Zephyr 7B + R2D2 reduce el ASR de GCG en <strong>4× comparado con Llama 2 13B</strong> (el segundo más robusto). MT-Bench score se mantiene en 6.0/6.5 — la utilidad general se preserva.
+                </p>
+            </div>
+        </section>
+
+        <!-- Key Findings -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="icon icon-yellow">💡</span>
+                Hallazgos Clave
+            </h2>
+            <div class="findings-grid">
+                <div class="finding-card">
+                    <div class="finding-card-title">🔄 Ningún ataque o defensa es uniformemente efectivo</div>
+                    <div class="finding-card-desc">Todos los ataques tienen ASR bajo en al menos un LLM, y todos los LLMs tienen robustez pobre contra al menos un ataque. Entrenar contra un solo ataque no garantiza robustez general.</div>
+                </div>
+                <div class="finding-card" style="border-left-color: rgba(16, 185, 129, 0.3);">
+                    <div class="finding-card-title">📏 La robustez es independiente del tamaño del modelo</div>
+                    <div class="finding-card-desc">No hay correlación entre robustez y tamaño del modelo dentro de familias. Los datos de entrenamiento y algoritmos son mucho más importantes que el tamaño (7B-70B evaluados).</div>
+                </div>
+                <div class="finding-card" style="border-left-color: rgba(245, 158, 11, 0.3);">
+                    <div class="finding-card-title">🔗 Contextual behaviors son más difíciles</div>
+                    <div class="finding-card-desc">El ASR es considerablemente más alto en contextual behaviors a pesar de su mayor potencial de daño diferencial. Los filtros existentes no capturan bien el contexto.</div>
+                </div>
+                <div class="finding-card" style="border-left-color: rgba(168, 85, 247, 0.3);">
+                    <div class="finding-card-title">⚡ GCG es el ataque más efectivo en modelos robustos</div>
+                    <div class="finding-card-desc">GCG obtiene el ASR más alto en modelos como Llama 2 que tienen mecanismos de refusal fuertes. Los ataques black-box son menos efectivos contra estos modelos.</div>
+                </div>
+                <div class="finding-card" style="border-left-color: rgba(239, 68, 68, 0.3);">
+                    <div class="finding-card-title">🖼️ Ataques multimodales son más fuertes</div>
+                    <div class="finding-card-desc">PGD-based attacks en LLMs multimodales obtienen ASR relativamente alto. Render Text baseline es bajo, confirmando que los ataques de imagen son más peligrosos.</div>
+                </div>
+                <div class="finding-card" style="border-left-color: rgba(59, 130, 246, 0.3);">
+                    <div class="finding-card-title">🎯 Entrenamiento adversarial preserva utilidad</div>
+                    <div class="finding-card-desc">R2D2 mejora robustez significativamente mientras preserva el rendimiento general (MT-Bench 6.0 vs 6.5 de Mistral base). No hay trade-off drástico.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- GovLLM-Sentinel Integration -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="icon icon-indigo">🔗</span>
+                Integración con GovLLM-Sentinel
+            </h2>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; line-height: 1.7;">
+                GovLLM-Sentinel implementa su propia batería de red teaming inspirada en HarmBench, adaptada al contexto gubernamental mexicano. Aquí se mapea la relación entre ambos frameworks:
+            </p>
+            <div style="overflow-x: auto;">
+                <table class="attack-table">
+                    <thead>
+                        <tr>
+                            <th>HarmBench</th>
+                            <th>GovLLM-Sentinel</th>
+                            <th>Mapping</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>510 behaviors (7 categorías)</td>
+                            <td>13 vectores de ataque</td>
+                            <td>GovLLM-Sentinel enfoca en amenazas gubernamentales (CURP, secretos de Estado, soberanía)</td>
+                        </tr>
+                        <tr>
+                            <td>GCG, PEZ, GBDA (white-box)</td>
+                            <td>Modo live con API keys</td>
+                            <td>Evaluación real contra GPT-4o, Claude, modelos locales</td>
+                        </tr>
+                        <tr>
+                            <td>PAIR, TAP, AutoDAN (black-box)</td>
+                            <td>Modo mock para CI/CD</td>
+                            <td>13 vectores predefinidos para testing automatizado</td>
+                        </tr>
+                        <tr>
+                            <td>R2D2 adversarial training</td>
+                            <td>Adversarial Trainer module</td>
+                            <td>Genera datasets de hardening en JSONL, Alpaca, ChatML format</td>
+                        </tr>
+                        <tr>
+                            <td>Clasificador Llama 2 13B</td>
+                            <td>Alignment Module (pre+post)</td>
+                            <td>Detección de sesgo, rewritten automático a versión neutral</td>
+                        </tr>
+                        <tr>
+                            <td>Copyright behaviors (hashing)</td>
+                            <td>PII Guard (18 tipos)</td>
+                            <td>CURP, RFC, SSN, tarjetas, CLABE, API keys</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="code-block" style="margin-top: 16px;">
+                <span class="label">Uso en GovLLM-Sentinel</span>
+<code><span class="keyword">from</span> attacks.automated_redteam <span class="keyword">import</span> RedTeamRunner, AttackCategory
+
+<span class="comment"># Modo mock — inspirado en HarmBench evaluation pipeline</span>
+runner = RedTeamRunner(mode=<span class="string">"mock"</span>)
+report = runner.run_all_tests(<span class="string">"gobierno-federal"</span>)
+
+<span class="comment"># Resultado: 13 vectores evaluados, score de robustez</span>
+<span class="keyword">print</span>(f<span class="string">"Score: {report.overall_resistance}%"</span>)
+<span class="keyword">print</span>(f<span class="string">"Grade: {report.security_grade}"</span>)
+
+<span class="comment"># Generar dataset de hardening (estilo R2D2)</span>
+<span class="keyword">from</span> core.adversarial_trainer <span class="keyword">import</span> AdversarialTrainer
+trainer = AdversarialTrainer()
+dataset = trainer.generate_dataset(report)
+trainer.export_dataset(dataset, <span class="string">"hardening.jsonl"</span>)</code>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>
+                <strong>GovLLM-Sentinel</strong> — Guía basada en HarmBench (Mazeika et al. 2024)<br>
+                Paper: <a href="https://arxiv.org/abs/2402.04249" target="_blank">arXiv:2402.04249v2</a> · <a href="https://github.com/centerforaisafety/HarmBench" target="_blank">GitHub: centerforaisafety/HarmBench</a><br>
+                <a href="index.html">Dashboard</a> · <a href="jailbreak-learning.html">Aprendizaje</a> · <a href="executive-summary.html">Resumen Ejecutivo</a>
+            </p>
+            <p style="margin-top: 14px; font-size: 0.8rem;">
+                © 2026 GovLLM-Sentinel. Uso educativo y ético.
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
