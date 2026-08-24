@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GovLLM-Sentinel — Generador de Badges Dinámicos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e17; --surface: #111827; --surface-2: #1a2332; --surface-3: #1f2937;
+  --accent: #3b82f6; --green: #22c55e; --amber: #f59e0b; --red: #ef4444;
+  --text: #f1f5f9; --text-muted: #94a3b8; --text-dim: #64748b;
+  --border: #1e293b; --border-light: #334155;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Space Grotesk', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%233b82f6' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); pointer-events: none; z-index: 0; }
+.container { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 24px; }
+
+.header { text-align: center; padding: 40px 0 30px; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+.header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+.header h1 span { color: var(--accent); }
+.header .sub { color: var(--text-muted); font-size: 0.95rem; }
+
+.form-section { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 24px; }
+.form-section h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+.form-section h2::before { content: ''; width: 4px; height: 20px; background: var(--accent); border-radius: 2px; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.form-group input, .form-group select {
+  background: var(--surface-2); border: 1px solid var(--border-light); border-radius: 8px;
+  padding: 10px 14px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;
+  outline: none; transition: border-color 0.2s;
+}
+.form-group input:focus, .form-group select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+.form-group input::placeholder { color: var(--text-dim); }
+
+.score-slider { display: flex; align-items: center; gap: 14px; }
+.score-slider input[type="range"] {
+  flex: 1; -webkit-appearance: none; height: 6px; background: var(--surface-3);
+  border-radius: 3px; outline: none;
+}
+.score-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent); cursor: pointer; border: 2px solid var(--bg);
+}
+.score-value {
+  font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700;
+  min-width: 60px; text-align: right;
+}
+
+/* Preview */
+.preview-section { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 24px; }
+.preview-section h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.preview-section h2::before { content: ''; width: 4px; height: 20px; background: var(--green); border-radius: 2px; }
+
+.badge-preview {
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px;
+  padding: 30px; display: flex; justify-content: center; margin-bottom: 20px;
+}
+.badge-preview svg { max-width: 100%; height: auto; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3)); }
+
+.preview-meta {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;
+}
+.meta-item { text-align: center; padding: 12px; background: var(--surface-2); border-radius: 8px; }
+.meta-item .meta-val { font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; font-weight: 700; }
+.meta-item .meta-label { font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; }
+
+.actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.action-btn {
+  padding: 10px 20px; border-radius: 8px; font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none;
+}
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: #2563eb; transform: translateY(-1px); }
+.btn-secondary { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
+.btn-secondary:hover { border-color: var(--accent); color: var(--text); }
+.btn-success { background: var(--green); color: white; }
+.btn-success:hover { background: #16a34a; }
+
+/* API Section */
+.api-section { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 24px; }
+.api-section h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.api-section h2::before { content: ''; width: 4px; height: 20px; background: var(--amber); border-radius: 2px; }
+
+.code-block {
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px 18px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+  color: var(--text-muted); overflow-x: auto; margin-bottom: 12px; white-space: pre; position: relative;
+}
+.code-block .kw { color: var(--accent); }
+.code-block .str { color: var(--green); }
+.code-block .num { color: var(--amber); }
+.copy-btn {
+  position: absolute; top: 8px; right: 8px; background: var(--surface-3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 10px; font-size: 0.7rem; color: var(--text-dim); cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.copy-btn:hover { border-color: var(--accent); color: var(--text); }
+
+.footer { text-align: center; padding: 30px 0; font-size: 0.8rem; color: var(--text-dim); border-top: 1px solid var(--border); }
+.footer a { color: var(--accent); text-decoration: none; }
+
+@media (max-width: 640px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .preview-meta { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="header">
+  <h1>🛡️ Generador de <span>Badges</span> Dinámicos</h1>
+  <div class="sub">Genera badges SVG personalizados según el score de tu modelo</div>
+</header>
+
+<!-- Form -->
+<div class="form-section">
+  <h2>Configuración del Badge</h2>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Nombre del Modelo</label>
+      <input type="text" id="modelName" placeholder="GPT-4o" value="GPT-4o">
+    </div>
+    <div class="form-group">
+      <label>Proveedor</label>
+      <input type="text" id="modelProvider" placeholder="OpenAI" value="OpenAI">
+    </div>
+    <div class="form-group">
+      <label>Vectores de Ataque</label>
+      <input type="number" id="vectorCount" value="29" min="1" max="100">
+    </div>
+    <div class="form-group">
+      <label>Idiomas</label>
+      <input type="text" id="langCount" value="5" min="1" max="20">
+    </div>
+  </div>
+  
+  <div class="form-group" style="margin-bottom: 8px;">
+    <label>Score de Seguridad</label>
+    <div class="score-slider">
+      <input type="range" id="scoreSlider" min="0" max="100" value="96">
+      <span class="score-value" id="scoreDisplay">96</span>
+    </div>
+  </div>
+  
+  <div class="form-group">
+    <label>Fecha de Evaluación</label>
+    <input type="date" id="evalDate" value="2026-08-24">
+  </div>
+</div>
+
+<!-- Preview -->
+<div class="preview-section">
+  <h2>Vista Previa</h2>
+  <div class="badge-preview" id="badgePreview"></div>
+  
+  <div class="preview-meta">
+    <div class="meta-item">
+      <div class="meta-val" id="metaScore" style="color: var(--green)">96</div>
+      <div class="meta-label">Score</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-val" id="metaGrade" style="color: var(--green)">A</div>
+      <div class="meta-label">Grade</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-val" id="metaResisted">28/29</div>
+      <div class="meta-label">Resistentes</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-val" id="metaVectors">29</div>
+      <div class="meta-label">Vectores</div>
+    </div>
+  </div>
+  
+  <div class="actions">
+    <button class="action-btn btn-primary" onclick="downloadSVG()">⬇ Descargar SVG</button>
+    <button class="action-btn btn-secondary" onclick="copySVG()">📋 Copiar SVG</button>
+    <button class="action-btn btn-success" onclick="copyMarkdown()">📝 Copiar Markdown</button>
+    <button class="action-btn btn-secondary" onclick="copyHTML()">🔗 Copiar HTML img</button>
+  </div>
+</div>
+
+<!-- API -->
+<div class="api-section">
+  <h2>API Dinámica</h2>
+  <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 12px;">
+    Genera badges dinámicamente con parámetros en la URL:
+  </p>
+  
+  <div class="code-block" id="apiUrl"><button class="copy-btn" onclick="copyText('apiUrl')">Copy</button><span class="kw">GET</span> <span class="str">https://0xvanguard.github.io/GovLLM-Sentinel/04-DASHBOARD/public/badge-dynamic.svg</span>
+<span class="kw">  ?model=</span><span class="str">GPT-4o</span>
+<span class="kw">  &score=</span><span class="num">96</span>
+<span class="kw">  &vectors=</span><span class="num">29</span>
+<span class="kw">  &langs=</span><span class="num">5</span>
+<span class="kw">  &date=</span><span class="str">2026-08-24</span></div>
+
+  <div class="code-block" id="readmeCode"><button class="copy-btn" onclick="copyText('readmeCode')">Copy</button><span class="cmt">&lt;!-- Badge dinámico en README --&gt;</span>
+[![GovLLM-Sentinel](<span class="str">https://0xvanguard.github.io/GovLLM-Sentinel/04-DASHBOARD/public/badge-dynamic.svg?model=GPT-4o&score=96&vectors=29&langs=5</span>)](<span class="str">https://0xvanguard.github.io/GovLLM-Sentinel/leaderboard</span>)</div>
+</div>
+
+<footer class="footer">
+  <p><a href="https://github.com/0xvanguard/GovLLM-Sentinel">GovLLM-Sentinel v3.0</a> · Generador de badges dinámicos para modelos LLM</p>
+</footer>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// GRADE LOGIC
+// ═══════════════════════════════════════════════════════════
+
+function getGrade(score) {
+  if (score >= 90) return { grade: "A", color: "#22c55e", label: "EXCELENTE" };
+  if (score >= 80) return { grade: "B", color: "#3b82f6", label: "BUENO" };
+  if (score >= 70) return { grade: "C", color: "#f59e0b", label: "ACEPTABLE" };
+  if (score >= 60) return { grade: "D", color: "#ea580c", label: "DEFICIENTE" };
+  return { grade: "F", color: "#ef4444", label: "RECHAZADO" };
+}
+
+// ═══════════════════════════════════════════════════════════
+// SVG GENERATOR
+// ═══════════════════════════════════════════════════════════
+
+function generateBadgeSVG(score, vectors, langs, date) {
+  const g = getGrade(score);
+  const resisted = Math.round(vectors * score / 100);
+  
+  const checkmark = g.grade === "F"
+    ? '<path d="M270 34 L290 54 M290 34 L270 54" stroke="#ef4444" stroke-width="2.5" fill="none" stroke-linecap="round"/>'
+    : `<path d="M270 40 L277 47 L292 32" stroke="${g.color}" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+  
+  const shieldInner = g.grade === "F"
+    ? '<path d="M14 20 L26 20" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>'
+    : '<path d="M15 22 L19 26 L27 16" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+  
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 80" width="340" height="80">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#111827"/>
+      <stop offset="100%" style="stop-color:#1a2332"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:${g.color}"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:${g.color}"/>
+      <stop offset="100%" style="stop-color:${g.color}88"/>
+    </linearGradient>
+  </defs>
+  <rect width="340" height="80" rx="12" fill="url(#bg)" stroke="#334155" stroke-width="1"/>
+  <rect width="4" height="80" rx="2" fill="url(#accent)"/>
+  <g transform="translate(20, 14)">
+    <path d="M20 4 L34 10 L34 22 C34 32 20 40 20 40 C20 40 6 32 6 22 L6 10 Z" fill="url(#shield)" opacity="0.9"/>
+    ${shieldInner}
+  </g>
+  <text x="68" y="26" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#f1f5f9">GovLLM-Sentinel</text>
+  <text x="68" y="46" font-family="monospace" font-size="11" font-weight="600" fill="#94a3b8">${g.label} · Grade: </text>
+  <text x="205" y="46" font-family="monospace" font-size="14" font-weight="700" fill="${g.color}">${g.grade}</text>
+  <text x="68" y="66" font-family="monospace" font-size="10" fill="#64748b">Score: ${score}/100 · ${resisted}/${vectors} vectors · ${langs} languages · ${date}</text>
+  <circle cx="300" cy="40" r="18" fill="none" stroke="${g.color}" stroke-width="2" opacity="0.3"/>
+  ${checkmark}
+</svg>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// LIVE UPDATE
+// ═══════════════════════════════════════════════════════════
+
+function update() {
+  const score = parseInt(document.getElementById("scoreSlider").value);
+  const vectors = parseInt(document.getElementById("vectorCount").value) || 29;
+  const langs = parseInt(document.getElementById("langCount").value) || 5;
+  const date = document.getElementById("evalDate").value || "2026-08-24";
+  
+  const g = getGrade(score);
+  const resisted = Math.round(vectors * score / 100);
+  
+  // Update preview
+  document.getElementById("badgePreview").innerHTML = generateBadgeSVG(score, vectors, langs, date);
+  
+  // Update meta
+  document.getElementById("metaScore").textContent = score;
+  document.getElementById("metaScore").style.color = g.color;
+  document.getElementById("metaGrade").textContent = g.grade;
+  document.getElementById("metaGrade").style.color = g.color;
+  document.getElementById("metaResisted").textContent = `${resisted}/${vectors}`;
+  document.getElementById("metaVectors").textContent = vectors;
+  document.getElementById("scoreDisplay").textContent = score;
+  document.getElementById("scoreDisplay").style.color = g.color;
+  
+  // Update slider track color
+  const slider = document.getElementById("scoreSlider");
+  slider.style.background = `linear-gradient(to right, ${g.color} ${score}%, #1f2937 ${score}%)`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════════════════
+
+function downloadSVG() {
+  const score = parseInt(document.getElementById("scoreSlider").value);
+  const vectors = parseInt(document.getElementById("vectorCount").value) || 29;
+  const langs = parseInt(document.getElementById("langCount").value) || 5;
+  const date = document.getElementById("evalDate").value || "2026-08-24";
+  const model = document.getElementById("modelName").value || "model";
+  const g = getGrade(score);
+  
+  const svg = generateBadgeSVG(score, vectors, langs, date);
+  const blob = new Blob([svg], { type: "image/svg+xml" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `badge-${model.replace(/\s+/g, '-').toLowerCase()}-${g.grade}.svg`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function copySVG() {
+  const score = parseInt(document.getElementById("scoreSlider").value);
+  const vectors = parseInt(document.getElementById("vectorCount").value) || 29;
+  const langs = parseInt(document.getElementById("langCount").value) || 5;
+  const date = document.getElementById("evalDate").value || "2026-08-24";
+  const svg = generateBadgeSVG(score, vectors, langs, date);
+  navigator.clipboard.writeText(svg).then(() => flash("✅ SVG copiado"));
+}
+
+function copyMarkdown() {
+  const score = parseInt(document.getElementById("scoreSlider").value);
+  const vectors = parseInt(document.getElementById("vectorCount").value) || 29;
+  const langs = parseInt(document.getElementById("langCount").value) || 5;
+  const model = document.getElementById("modelName").value || "model";
+  const g = getGrade(score);
+  const md = `[![GovLLM-Sentinel](https://raw.githubusercontent.com/0xvanguard/GovLLM-Sentinel/main/04-DASHBOARD/public/badges/badge-${g.grade}.svg)](https://0xvanguard.github.io/GovLLM-Sentinel/leaderboard)`;
+  navigator.clipboard.writeText(md).then(() => flash("✅ Markdown copiado"));
+}
+
+function copyHTML() {
+  const score = parseInt(document.getElementById("scoreSlider").value);
+  const vectors = parseInt(document.getElementById("vectorCount").value) || 29;
+  const langs = parseInt(document.getElementById("langCount").value) || 5;
+  const html = `<img src="https://raw.githubusercontent.com/0xvanguard/GovLLM-Sentinel/main/04-DASHBOARD/public/badges/badge-${getGrade(score).grade}.svg" alt="GovLLM-Sentinel Approved" />`;
+  navigator.clipboard.writeText(html).then(() => flash("✅ HTML img copiado"));
+}
+
+function copyText(id) {
+  const el = document.getElementById(id);
+  const text = el.textContent.replace("Copy", "").trim();
+  navigator.clipboard.writeText(text).then(() => flash("✅ Copiado"));
+}
+
+function flash(msg) {
+  const div = document.createElement("div");
+  div.style.cssText = "position:fixed;top:20px;right:20px;background:#22c55e;color:white;padding:10px 20px;border-radius:8px;font-size:0.85rem;font-weight:600;z-index:9999;animation:fadeIn 0.2s;";
+  div.textContent = msg;
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 1500);
+}
+
+// ═══════════════════════════════════════════════════════════
+// EVENT LISTENERS
+// ═══════════════════════════════════════════════════════════
+
+document.getElementById("scoreSlider").addEventListener("input", update);
+document.getElementById("vectorCount").addEventListener("input", update);
+document.getElementById("langCount").addEventListener("input", update);
+document.getElementById("evalDate").addEventListener("input", update);
+document.getElementById("modelName").addEventListener("input", update);
+
+// Initial render
+update();
+</script>
+</body>
+</html>

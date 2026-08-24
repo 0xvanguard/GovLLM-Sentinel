@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  GovLLM-Sentinel Dynamic Badge
+  
+  Usage:
+    badge-dynamic.svg?model=GPT-4o&score=96&vectors=29&langs=5&date=2026-08-24
+  
+  Parameters:
+    model   - Model name (default: "LLM")
+    score   - Security score 0-100 (default: 0)
+    vectors - Number of attack vectors (default: 29)
+    langs   - Number of languages (default: 5)
+    date    - Evaluation date (default: today)
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 80" width="340" height="80">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#111827"/>
+      <stop offset="100%" style="stop-color:#1a2332"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3b82f6"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6"/>
+      <stop offset="100%" style="stop-color:#2563eb"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="340" height="80" rx="12" fill="url(#bg)" stroke="#334155" stroke-width="1"/>
+  <rect width="4" height="80" rx="2" fill="url(#accent)"/>
+  
+  <!-- Shield -->
+  <g transform="translate(20, 14)">
+    <path d="M20 4 L34 10 L34 22 C34 32 20 40 20 40 C20 40 6 32 6 22 L6 10 Z" fill="url(#shield)" opacity="0.9"/>
+    <path d="M15 22 L19 26 L27 16" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- Model name (dynamic) -->
+  <text x="68" y="26" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#f1f5f9">
+    <tspan id="model">LLM</tspan>
+  </text>
+  
+  <!-- Grade line (dynamic) -->
+  <text x="68" y="46" font-family="monospace" font-size="11" font-weight="600" fill="#94a3b8">
+    SECURED · Grade: <tspan id="grade" font-size="14" font-weight="700" fill="#22c55e">A</tspan>
+  </text>
+  
+  <!-- Score line (dynamic) -->
+  <text x="68" y="66" font-family="monospace" font-size="10" fill="#64748b">
+    <tspan id="scoreText">Score: 0/100 · 0/29 vectors · 5 languages</tspan>
+  </text>
+  
+  <!-- Checkmark -->
+  <circle cx="300" cy="40" r="18" fill="none" stroke="#22c55e" stroke-width="2" opacity="0.3"/>
+  <path d="M290 40 L297 47 L312 32" stroke="#22c55e" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Dynamic update script -->
+  <script type="text/javascript"><![CDATA[
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var model = params.get('model') || 'LLM';
+      var score = parseInt(params.get('score')) || 0;
+      var vectors = parseInt(params.get('vectors')) || 29;
+      var langs = parseInt(params.get('langs')) || 5;
+      var date = params.get('date') || new Date().toISOString().split('T')[0];
+      
+      // Determine grade
+      var grade, color, label;
+      if (score >= 90) { grade = 'A'; color = '#22c55e'; label = 'EXCELENTE'; }
+      else if (score >= 80) { grade = 'B'; color = '#3b82f6'; label = 'BUENO'; }
+      else if (score >= 70) { grade = 'C'; color = '#f59e0b'; label = 'ACEPTABLE'; }
+      else if (score >= 60) { grade = 'D'; color = '#ea580c'; label = 'DEFICIENTE'; }
+      else { grade = 'F'; color = '#ef4444'; label = 'RECHAZADO'; }
+      
+      var resisted = Math.round(vectors * score / 100);
+      
+      // Update elements
+      document.getElementById('model').textContent = model;
+      document.getElementById('grade').textContent = grade;
+      document.getElementById('grade').setAttribute('fill', color);
+      document.getElementById('scoreText').textContent = 
+        'Score: ' + score + '/100 · ' + resisted + '/' + vectors + ' vectors · ' + langs + ' languages';
+      
+      // Update accent color
+      var stops = document.querySelectorAll('#accent stop, #shield stop');
+      stops.forEach(function(stop) {
+        if (stop.style.stopColor === '#3b82f6') stop.style.stopColor = color;
+        if (stop.style.stopColor === '#2563eb') stop.style.stopColor = color + '88';
+      });
+      
+      // Update checkmark
+      var circle = document.querySelector('circle');
+      var check = document.querySelectorAll('path')[3]; // 4th path = checkmark
+      if (circle) circle.setAttribute('stroke', color);
+      if (check && grade !== 'F') {
+        check.setAttribute('stroke', color);
+      }
+      
+      // For grade F, change checkmark to X
+      if (grade === 'F' && check) {
+        check.setAttribute('d', 'M290 34 L310 54 M310 34 L290 54');
+        check.setAttribute('stroke', '#ef4444');
+      }
+    })();
+  ]]></script>
+</svg>
