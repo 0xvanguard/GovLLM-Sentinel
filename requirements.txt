@@ -6,6 +6,11 @@ fastapi>=0.109.0
 uvicorn[standard]>=0.27.0
 pydantic>=2.5.0
 
+# Authentication (VULN-B002 fix)
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.6
+
 # HTTP clients (for LLM connectors)
 requests>=2.31.0
 httpx>=0.26.0
