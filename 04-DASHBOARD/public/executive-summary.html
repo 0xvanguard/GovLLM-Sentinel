@@ -5,136 +5,221 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resumen Ejecutivo - GovLLM-Sentinel</title>
 
-    <!-- Security Headers (VULN-004, VULN-005, VULN-013, VULN-014 fix) -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none';">
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none';">
     <meta http-equiv="X-Frame-Options" content="DENY">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
     <meta http-equiv="Strict-Transport-Security" content="max-age=31536000; includeSubDomains">
     <meta name="robots" content="noindex, nofollow">
+
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"></noscript>
+
     <style>
-        :root {
-            --primary: #1a56db;
-            --primary-dark: #1e40af;
-            --success: #059669;
-            --warning: #d97706;
-            --danger: #dc2626;
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --text: #1e293b;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-        }
-
+        /* ── Page-specific overrides ── */
         .container {
-            max-width: 1200px;
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 40px 24px;
         }
 
         .header {
             text-align: center;
             margin-bottom: 40px;
+            background: linear-gradient(135deg, rgba(29, 78, 216, 0.3), rgba(59, 130, 246, 0.15));
+            border: 1px solid var(--border-accent);
+            border-radius: var(--radius-xl);
+            padding: 48px 40px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
         }
 
         .header h1 {
-            font-size: 2.5rem;
-            color: var(--primary);
+            font-size: 2.4rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, var(--text-primary), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 8px;
         }
 
         .header .subtitle {
-            color: var(--text-muted);
-            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            font-weight: 400;
         }
 
         .badge-read-only {
-            display: inline-block;
-            background: var(--primary);
-            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: var(--primary-light);
             padding: 6px 16px;
             border-radius: 20px;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 500;
-            margin-top: 12px;
+            margin-top: 16px;
+            letter-spacing: 0.02em;
         }
 
+        /* ── Sections ── */
         .section {
-            background: var(--surface);
-            border-radius: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
             padding: 32px;
             margin-bottom: 24px;
-            box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
-            border: 1px solid var(--border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out both;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+        }
+
+        .section:nth-child(2) { animation-delay: 0.1s; }
+        .section:nth-child(3) { animation-delay: 0.15s; }
+        .section:nth-child(4) { animation-delay: 0.2s; }
+        .section:nth-child(5) { animation-delay: 0.25s; }
+        .section:nth-child(6) { animation-delay: 0.3s; }
+        .section:nth-child(7) { animation-delay: 0.35s; }
+
+        .section:hover {
+            border-color: var(--border-accent);
         }
 
         .section-title {
-            font-size: 1.4rem;
-            font-weight: 600;
+            font-size: 1.25rem;
+            font-weight: 700;
             margin-bottom: 24px;
-            color: var(--text);
+            color: var(--text-primary);
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
+            letter-spacing: -0.01em;
         }
 
         .section-title .icon {
-            width: 40px;
-            height: 40px;
-            background: var(--primary);
-            color: white;
-            border-radius: 10px;
+            width: 42px;
+            height: 42px;
+            background: var(--primary-glow);
+            color: var(--primary-light);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: var(--radius-md);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.2rem;
+            flex-shrink: 0;
         }
 
-        /* Security Grade Card */
+        /* ── Grade Card ── */
         .grade-card {
             display: flex;
             align-items: center;
             gap: 40px;
-            padding: 40px;
-            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-            border-radius: 16px;
+            padding: 36px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(16, 185, 129, 0.05));
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            border-radius: var(--radius-lg);
             margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .grade-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.06), transparent 70%);
+            pointer-events: none;
         }
 
         .grade-circle {
-            width: 140px;
-            height: 140px;
+            width: 150px;
+            height: 150px;
             border-radius: 50%;
-            background: white;
+            background: rgba(16, 185, 129, 0.08);
+            border: 2px solid rgba(16, 185, 129, 0.2);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 6px rgb(0 0 0 / 0.1);
             flex-shrink: 0;
+            position: relative;
+            animation: fadeIn 0.8s ease-out 0.3s both;
+        }
+
+        .grade-circle::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent, rgba(16, 185, 129, 0.2), transparent);
+            z-index: -1;
+            animation: spin 8s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         .grade-letter {
-            font-size: 3.5rem;
-            font-weight: 700;
-            color: var(--success);
+            font-size: 3.8rem;
+            font-weight: 800;
             line-height: 1;
+            letter-spacing: -0.04em;
+            background: linear-gradient(135deg, var(--success), var(--success-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .grade-label {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
             margin-top: 4px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
         }
 
         .grade-details {
@@ -142,85 +227,134 @@
         }
 
         .grade-details h3 {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
+            font-weight: 700;
             margin-bottom: 8px;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
         }
 
         .grade-details p {
-            color: var(--text-muted);
-            margin-bottom: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            font-size: 0.92rem;
+            line-height: 1.6;
         }
 
+        /* ── Score Bars ── */
         .score-bars {
             display: grid;
-            gap: 12px;
+            gap: 14px;
         }
 
         .score-bar-item {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
         }
 
         .score-bar-label {
-            width: 140px;
-            font-size: 0.9rem;
-            color: var(--text-muted);
+            width: 160px;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            font-weight: 500;
         }
 
         .score-bar-track {
             flex: 1;
-            height: 8px;
-            background: #e2e8f0;
-            border-radius: 4px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
             overflow: hidden;
         }
 
         .score-bar-fill {
             height: 100%;
-            border-radius: 4px;
+            border-radius: 3px;
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 8px currentColor;
         }
 
         .score-bar-value {
-            width: 45px;
-            font-size: 0.9rem;
-            font-weight: 600;
+            width: 48px;
+            font-size: 0.88rem;
+            font-weight: 700;
             text-align: right;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
         }
 
-        /* Stats Grid */
+        /* ── Stats Grid ── */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
+            gap: 16px;
             margin-bottom: 24px;
         }
 
         .stat-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            padding: 24px 16px;
             text-align: center;
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.04), transparent);
+        }
+
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--border-accent);
+            transform: translateY(-2px);
         }
 
         .stat-value {
-            font-size: 2.5rem;
-            font-weight: 700;
+            font-size: 2.8rem;
+            font-weight: 800;
             line-height: 1;
             margin-bottom: 8px;
+            letter-spacing: -0.03em;
         }
 
-        .stat-value.danger { color: var(--danger); }
-        .stat-value.warning { color: var(--warning); }
-        .stat-value.success { color: var(--success); }
+        .stat-value.danger {
+            background: linear-gradient(135deg, var(--danger), var(--danger-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-value.warning {
+            background: linear-gradient(135deg, var(--warning), var(--warning-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-value.success {
+            background: linear-gradient(135deg, var(--success), var(--success-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
         .stat-label {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--text-muted);
+            font-weight: 500;
         }
 
-        /* Compliance Checklist */
+        /* ── Compliance Checklist ── */
         .checklist {
             list-style: none;
         }
@@ -228,107 +362,201 @@
         .checklist li {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             padding: 16px;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: background var(--transition-fast);
+            border-radius: var(--radius-sm);
         }
 
         .checklist li:last-child {
             border-bottom: none;
         }
 
+        .checklist li:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
         .check-icon {
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            font-weight: 700;
             flex-shrink: 0;
         }
 
-        .check-icon.pass { background: #d1fae5; color: #065f46; }
-        .check-icon.pending { background: #fef3c7; color: #92400e; }
+        .check-icon.pass {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--success-light);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .check-icon.pending {
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--warning-light);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
 
         .check-text {
             flex: 1;
         }
 
         .check-name {
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-primary);
             margin-bottom: 2px;
         }
 
         .check-desc {
             font-size: 0.85rem;
-            color: var(--text-muted);
+            color: var(--text-secondary);
         }
 
-        /* Recommendations */
+        /* ── Recommendations ── */
         .recommendation {
             display: flex;
             gap: 16px;
-            padding: 20px;
-            background: #f8fafc;
-            border-radius: 12px;
+            padding: 18px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: var(--radius-md);
             margin-bottom: 12px;
+            transition: all var(--transition-normal);
         }
 
         .recommendation:last-child {
             margin-bottom: 0;
         }
 
+        .recommendation:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.08);
+            transform: translateX(4px);
+        }
+
         .rec-priority {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
+            width: 34px;
+            height: 34px;
+            border-radius: var(--radius-sm);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             flex-shrink: 0;
         }
 
-        .rec-priority.high { background: #fee2e2; color: #991b1b; }
-        .rec-priority.medium { background: #fef3c7; color: #92400e; }
-        .rec-priority.low { background: #d1fae5; color: #065f46; }
+        .rec-priority.high {
+            background: var(--danger-glow);
+            color: var(--danger-light);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+
+        .rec-priority.medium {
+            background: var(--warning-glow);
+            color: var(--warning-light);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+
+        .rec-priority.low {
+            background: var(--success-glow);
+            color: var(--success-light);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
 
         .rec-content h4 {
-            font-size: 1rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
             margin-bottom: 4px;
         }
 
         .rec-content p {
-            font-size: 0.9rem;
-            color: var(--text-muted);
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
         }
 
-        /* Footer */
+        /* ── Model Info Grid ── */
+        .model-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .model-info-item label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .model-info-item span {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        /* ── Footer ── */
         .footer {
             text-align: center;
             padding: 40px 20px;
             color: var(--text-muted);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            margin-top: 16px;
+        }
+
+        .footer strong {
+            color: var(--text-secondary);
+            font-weight: 600;
         }
 
         .footer a {
-            color: var(--primary);
+            color: var(--primary-light);
             text-decoration: none;
+            transition: color var(--transition-fast);
         }
 
-        /* Print */
+        .footer a:hover {
+            color: var(--text-primary);
+            text-decoration: underline;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .container { padding: 16px; }
+            .header { padding: 32px 20px; }
+            .header h1 { font-size: 1.6rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .stat-value { font-size: 2rem; }
+            .grade-card { flex-direction: column; text-align: center; padding: 24px; }
+            .grade-circle { width: 120px; height: 120px; }
+            .grade-letter { font-size: 3rem; }
+            .score-bar-label { width: 120px; font-size: 0.82rem; }
+            .score-bar-item { flex-wrap: wrap; gap: 8px; }
+            .model-info-grid { grid-template-columns: 1fr; }
+            .section { padding: 20px; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .grade-details h3 { font-size: 1.15rem; }
+        }
+
+        /* ── Print ── */
         @media print {
             .container { padding: 20px; }
-            .section { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+            .section { break-inside: avoid; box-shadow: none; background: white; border: 1px solid #ddd; }
             .grade-card { background: #f0f9ff !important; -webkit-print-color-adjust: exact; }
-        }
-
-        @media (max-width: 768px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .grade-card { flex-direction: column; text-align: center; }
-            .score-bar-item { flex-wrap: wrap; }
         }
     </style>
 </head>
@@ -337,7 +565,7 @@
         <!-- Header -->
         <div class="header">
             <h1>📊 Resumen Ejecutivo</h1>
-            <p class="subtitle">Evaluación de Seguridad - Modelos de Lenguaje (LLM)</p>
+            <p class="subtitle">Evaluación de Seguridad — Modelos de Lenguaje (LLM)</p>
             <span class="badge-read-only">🔒 Documento de Solo Lectura</span>
         </div>
 
@@ -355,28 +583,28 @@
                         <div class="score-bar-item">
                             <span class="score-bar-label">Resistencia Jailbreak</span>
                             <div class="score-bar-track">
-                                <div class="score-bar-fill" style="width: 78%; background: var(--warning);"></div>
+                                <div class="score-bar-fill" style="width: 78%; background: linear-gradient(90deg, var(--warning), var(--warning-light));"></div>
                             </div>
                             <span class="score-bar-value">78%</span>
                         </div>
                         <div class="score-bar-item">
                             <span class="score-bar-label">Protección Inyección</span>
                             <div class="score-bar-track">
-                                <div class="score-bar-fill" style="width: 85%; background: var(--success);"></div>
+                                <div class="score-bar-fill" style="width: 85%; background: linear-gradient(90deg, var(--success), var(--success-light));"></div>
                             </div>
                             <span class="score-bar-value">85%</span>
                         </div>
                         <div class="score-bar-item">
                             <span class="score-bar-label">Anti-Exfiltración</span>
                             <div class="score-bar-track">
-                                <div class="score-bar-fill" style="width: 90%; background: var(--success);"></div>
+                                <div class="score-bar-fill" style="width: 90%; background: linear-gradient(90deg, var(--success), var(--success-light));"></div>
                             </div>
                             <span class="score-bar-value">90%</span>
                         </div>
                         <div class="score-bar-item">
                             <span class="score-bar-label">Filtros Contenido</span>
                             <div class="score-bar-track">
-                                <div class="score-bar-fill" style="width: 72%; background: var(--warning);"></div>
+                                <div class="score-bar-fill" style="width: 72%; background: linear-gradient(90deg, var(--warning), var(--warning-light));"></div>
                             </div>
                             <span class="score-bar-value">72%</span>
                         </div>
@@ -428,7 +656,7 @@
                 <li>
                     <span class="check-icon pass">✓</span>
                     <div class="check-text">
-                        <div class="check-name">GDPR - Protección de Datos</div>
+                        <div class="check-name">GDPR — Protección de Datos</div>
                         <div class="check-desc">Cumple con principios de minimización y propósito limitado</div>
                     </div>
                 </li>
@@ -443,7 +671,7 @@
                     <span class="check-icon pending">⏳</span>
                     <div class="check-text">
                         <div class="check-name">MITRE ATLAS</div>
-                        <div class="check-desc">Evaluación en progreso - próximamente</div>
+                        <div class="check-desc">Evaluación en progreso — próximamente</div>
                     </div>
                 </li>
             </ul>
@@ -491,22 +719,22 @@
                 <span class="icon">🤖</span>
                 Información del Modelo Evaluado
             </h2>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
-                <div>
-                    <p style="color: var(--text-muted); margin-bottom: 4px;">Nombre del Modelo</p>
-                    <p style="font-weight: 500;">GPT-4o</p>
+            <div class="model-info-grid">
+                <div class="model-info-item">
+                    <label>Nombre del Modelo</label>
+                    <span>GPT-4o</span>
                 </div>
-                <div>
-                    <p style="color: var(--text-muted); margin-bottom: 4px;">Versión</p>
-                    <p style="font-weight: 500;">2024-08-06</p>
+                <div class="model-info-item">
+                    <label>Versión</label>
+                    <span>2024-08-06</span>
                 </div>
-                <div>
-                    <p style="color: var(--text-muted); margin-bottom: 4px;">Fecha de Evaluación</p>
-                    <p style="font-weight: 500;">23 de Agosto, 2026</p>
+                <div class="model-info-item">
+                    <label>Fecha de Evaluación</label>
+                    <span>23 de Agosto, 2026</span>
                 </div>
-                <div>
-                    <p style="color: var(--text-muted); margin-bottom: 4px;">Contrato de Autorización</p>
-                    <p style="font-weight: 500;">CONTRATO-RT-2026-001</p>
+                <div class="model-info-item">
+                    <label>Contrato de Autorización</label>
+                    <span>CONTRATO-RT-2026-001</span>
                 </div>
             </div>
         </div>
@@ -514,9 +742,9 @@
         <!-- Footer -->
         <footer class="footer">
             <p>
-                <strong>GovLLM-Sentinel</strong> - Framework de Evaluación de Seguridad LLM<br>
+                <strong>GovLLM-Sentinel</strong> — Framework de Evaluación de Seguridad LLM<br>
                 Documento generado el 23 de Agosto, 2026<br>
-                <a href="#">Volver al Dashboard</a> · <a href="#">Contacto</a>
+                <a href="index.html">Volver al Dashboard</a> · <a href="#">Contacto</a>
             </p>
             <p style="margin-top: 16px; font-size: 0.8rem;">
                 Este documento es de uso exclusivo para entidades autorizadas.<br>
